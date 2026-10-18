@@ -1,0 +1,514 @@
+@page{
+    size:A4;
+    margin:0;
+}
+:root{
+    --azul-escuro:#0f2557;      /* títulos, tabela, capa */
+    --azul:#1f3c8f;             /* destaque do RCP */
+    --dourado:#d9a52b;          /* linhas e marcadores */
+    --dourado-claro:#fdf6e6;    /* coluna recomendada */
+    --texto:#1c1f26;
+    --texto-suave:#6b7280;
+    --borda:#d9dde5;
+    --fundo-card:#f6f8fa;
+    --fonte:"Helvetica Neue", Arial, Helvetica, sans-serif;
+    --imagem-capa:none;
+    --imagem-final:none;
+}
+ 
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+html{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+}
+body{
+    font-family:var(--fonte);
+    color:var(--texto);
+    font-size:10.5pt;
+    line-height:1.5;
+    background:#e5e7eb;
+}
+.pagina{
+    position:relative;
+    width:210mm;
+    min-height:297mm;
+    margin:10mm auto;
+    background:#fff;
+    padding:20mm 18mm 32mm;
+    box-shadow:0 2px 12px rgba(0,0,0,.18);
+    break-after:page;
+    page-break-after:always;
+    overflow:hidden;
+}
+@media print{
+    body{
+        background:#fff;
+    }
+    .pagina{
+        margin:0;
+        box-shadow:none;
+        height:297mm;
+    }
+}
+ 
+/* --------- IMAGENS DE FUNDO POR TIPO --------- */
+body[data-tipo="rcp"] {
+    --imagem-capa: url("img/rc.jpg");
+    --imagem-final: url("img/rc.jpg");
+}
+
+body[data-tipo="patrimonial"] {
+    --imagem-capa: url("img/emp.jpg");
+    --imagem-final: url("img/emp.jpg");
+}
+
+/* Esconde elementos indesejados caso precisem de regras estáticas,
+   mas agora o gerador unificou o layout para todos. */
+body[data-capa="nao"] .capa{
+    display:none !important;
+}
+ 
+/* --------- LOGO --------- */
+.logo{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--azul-escuro);
+}
+.logo .simbolo{
+    width:38px;
+    height:38px;
+    border:2.5px solid var(--dourado);
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-weight:800;
+    color:var(--dourado);
+    font-size:16pt;
+    line-height:1;
+}
+.logo .nome{
+    font-size:24pt;
+    font-weight:700;
+    letter-spacing:-1px;
+    line-height:.9;
+}
+.logo .sub{
+    display:block;
+    font-size:6.5pt;
+    font-weight:400;
+    letter-spacing:0;
+}
+.logo.branco{
+    color:#fff;
+}
+.logo img{
+    height:42px;
+    display:block;
+}
+ 
+/* --------- TITULOS DE SELECAO --------- */
+h2.secao{
+    font-size:16pt;
+    color:var(--azul-escuro);
+    padding-bottom:6px;
+    margin:0 0 14px;
+    border-bottom:3px solid var(--dourado);
+}
+.pagina + .pagina h2.secao:not(:first-child){
+    margin-top:26px;
+}
+h2.secao + *{
+    margin-top:0;
+}
+.bloco{
+    margin-bottom:26px;
+}
+.intro{
+    text-align:justify;
+    margin-bottom:12px;
+}
+ 
+/* --------- CAPA --------- */
+.capa{
+    padding:0;
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    /* --- AZUL MAIS TRANSPARENTE NA CAPA PARA DESTACAR A IMAGEM --- */
+    background:
+      linear-gradient(180deg, rgba(15,37,87,.15) 0%, rgba(15,37,87,.70) 85%),
+      var(--imagem-capa),
+      linear-gradient(160deg,#5b7ba6 0%, #1c3a73 45%, var(--azul-escuro) 100%);
+    background-size:cover;
+    background-position:center;
+}
+.capa .logo-topo{
+    position:absolute;
+    top:14mm;
+    right:16mm;
+}
+.capa .conteudo{
+    padding:0 20mm 12mm;
+}
+.capa .linha{
+    width:50mm;
+    height:3px;
+    background:var(--dourado);
+    margin-bottom:8mm;
+}
+.capa h1{
+    font-size:58pt;
+    font-weight:300;
+    line-height:1.02;
+    margin-bottom:8mm;
+}
+.capa .tipo{
+    font-size:17pt;
+    color:var(--dourado);
+    margin-bottom:14mm;
+}
+.capa .cliente{
+    background:rgba(255,255,255,.18);
+    padding:7mm 8mm;
+    text-align:center;
+    font-size:15pt;
+    border-radius:2px;
+}
+.capa .cliente small{
+    display:block;
+    font-size:12pt;
+    color:#b9c8ee;
+    margin-bottom:2mm;
+}
+.capa .nota-legal{
+    position:static;
+    margin:10mm 0 0;
+    color:#c7d2ee;
+    border:0;
+    padding:0;
+    background:none;
+    font-size:7.5pt;
+    text-align:center;
+}
+ 
+/* --------- CABECALHO RCP SEM CAPA (Mantido por compatibilidade) --------- */
+.cabecalho{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding-bottom:10px;
+    margin-bottom:14px;
+    border-bottom:6px solid var(--azul);
+}
+.cabecalho h1{
+    font-size:26pt;
+    color:var(--azul);
+    line-height:1.1;
+}
+.cabecalho p{
+    font-size:13pt;
+    color:var(--texto-suave);
+    margin-top:4px;
+}
+ 
+.preparado{
+    background:var(--fundo-card);
+    border-left:5px solid var(--dourado);
+    padding:12px 18px;
+    margin-bottom:24px;
+}
+.preparado small{
+    display:block;
+    font-size:8pt;
+    letter-spacing:.5px;
+    color:var(--texto-suave);
+    text-transform:uppercase;
+}
+.preparado strong{
+    font-size:13.5pt;
+    color:var(--texto);
+    text-transform:uppercase;
+}
+ 
+/* --------- BULLETS DE DESTAQUES --------- */
+ul.destaques{
+    list-style:none;
+}
+ul.destaques li{
+    position:relative;
+    padding-left:16px;
+    margin-bottom:8px;
+    text-align:justify;
+}
+ul.destaques li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.55em;
+    width:6px;
+    height:6px;
+    background:var(--dourado);
+}
+ul.destaques strong, .caixa-lista strong{
+    color:var(--azul-escuro);
+}
+ 
+/* --------- CARDS DE RISCO --------- */
+.cards{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+.cards.tres{
+    grid-template-columns:repeat(3,1fr);
+}
+.card{
+    border:1px solid var(--borda);
+    border-radius:4px;
+    padding:10px 14px;
+    background:#fff;
+}
+.card .rotulo{
+    font-size:8pt;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--texto-suave);
+}
+.card .valor{
+    font-size:11.5pt;
+    font-weight:700;
+    color:var(--azul-escuro);
+    margin-top:3px;
+}
+.card .detalhe{
+    font-size:9pt;
+    color:var(--texto-suave);
+    margin-top:2px;
+}
+ 
+/* --------- CAIXA COM LISTA --------- */
+.caixa{
+    border:1px solid var(--borda);
+    border-radius:4px;
+    padding:14px 18px;
+    background:#fff;
+}
+.caixa-lista{
+    list-style:none;
+}
+.caixa-lista li{
+    position:relative;
+    padding-left:18px;
+    margin-bottom:9px;
+    text-align:justify;
+}
+.caixa-lista li:last-child{
+    margin-bottom:0;
+}
+.caixa-lista li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.4em;
+    width:9px;
+    height:9px;
+    background:var(--dourado);
+}
+ 
+/* Condições técnicas em texto corrido (Mantido por compatibilidade) */
+.condicoes p{
+    margin-bottom:9px;
+    text-align:justify;
+}
+.condicoes strong{
+    color:var(--texto);
+}
+ 
+/* --------- TABELA COMPARATIVA --------- */
+table.comparativo{
+    width:100%;
+    border-collapse:collapse;
+    margin:10px 0 8px;
+    font-size:10pt;
+}
+.comparativo th{
+    background:var(--azul-escuro);
+    color:#fff;
+    padding:10px 12px;
+    text-align:center;
+    border-bottom:3px solid var(--dourado);
+}
+.comparativo th:first-child{
+    text-align:left; width:30%;
+}
+.comparativo td{
+    padding:10px 12px;
+    border:1px solid var(--borda);
+    text-align:center;
+}
+.comparativo td:first-child{
+    text-align:left;
+}
+.comparativo .destaque{
+    background:var(--dourado-claro);
+    font-weight:700;
+    color:var(--azul-escuro);
+}
+.comparativo tr.total td{
+    font-weight:700;
+}
+.comparativo .secundario{
+    display:block;
+    font-size:8.5pt; 
+    font-weight:400;
+    color:var(--texto-suave);
+}
+.nota{
+    font-size:9pt;
+    font-style:italic;
+    color:var(--texto-suave);
+    text-align:center;
+    margin-bottom:18px;
+}
+ 
+.recomendacao{
+    border:1px solid var(--borda);
+    border-radius:4px;
+    padding:14px 18px;
+}
+.recomendacao strong{
+    color:var(--azul-escuro);
+}
+ 
+/* --------- GRADE REFERENCIAIS --------- */
+.grade{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 14px;
+}
+.grade .item{
+    background:var(--fundo-card);
+    border:1px solid var(--borda);
+    border-radius:3px;
+    padding:9px 14px 9px 30px;
+    position:relative;
+    font-size:10pt;
+}
+.grade .item::before{
+    content:"¹3";
+    position:absolute;
+    left:11px;
+    top:8px;
+    color:var(--dourado);
+    font-weight:700;
+}
+ 
+/* --------- ASSINATURA --------- */
+.assinatura{
+    margin-top:22px;
+}
+.assinatura .nome{
+    font-size:14pt;
+    font-weight:700;
+    color:var(--azul);
+}
+.assinatura .cargo{
+    color:var(--texto-suave);
+    margin-bottom:10px;
+}
+.assinatura .contato{
+    font-size:9.5pt;
+    line-height:1.7;
+}
+ 
+/* --------- RODAPÉ --------- */
+.rodape{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:0 18mm 0;
+    text-align:center;
+    font-size:7.5pt;
+    color:var(--texto-suave);
+}
+.rodape::after{
+    content:"";
+    display:block;
+    height:6px;
+    background:var(--azul-escuro);
+    margin:5mm -18mm 0;
+}
+ 
+/* --------- PÁGINA FINAL --------- */
+.final{
+    color:#fff;
+    padding:0;
+    /* --- AZUL MAIS TRANSPARENTE NA FINAL PARA DESTACAR A IMAGEM --- */
+    background:
+      linear-gradient(rgba(15,37,87,.30), rgba(15,37,87,.70)),
+      var(--imagem-final),
+      linear-gradient(160deg,#2a4a8d, var(--azul-escuro));
+    background-size:cover;
+    background-position:center;
+}
+.final .topo{
+    padding:75mm 22mm 0;
+    text-align:center;
+}
+.final h2{
+    font-size:28pt;
+    line-height:1.2;
+    margin-bottom:8mm;
+}
+.final .subtitulo{
+    font-size:12pt;
+}
+.final .assina{
+    position:absolute;
+    right:18mm;
+    top:150mm;
+    text-align:right;
+    border-top:2px solid var(--dourado);
+    padding-top:6px;
+    min-width:70mm;
+}
+.final .assina strong{
+    display:block;
+    font-size:12.5pt;
+}
+.final .assina span{
+    color:#b9c8ee;
+    font-size:9.5pt;
+}
+.final .contato-box{
+    position:absolute;
+    left:20mm;
+    right:20mm;
+    bottom:20mm;
+    background:rgba(255,255,255,.16);
+    text-align:center;
+    padding:9mm 8mm;
+    font-size:11pt;
+}
+.final .contato-box .logo{
+    margin-bottom:6mm;
+}
+.final .contato-box p{
+    margin-bottom:3mm;
+}
+.final .contato-box .endereco{
+    color:#b9c8ee;
+    font-size:9.5pt;
+}
+ 
+.evitar-quebra{
+    break-inside:avoid;
+    page-break-inside:avoid;
+}

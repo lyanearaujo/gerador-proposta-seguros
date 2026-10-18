@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Proposta Comercial</title>
+    <link rel="stylesheet" href="proposta.css">
+</head>
+
+<body data-tipo="patrimonial" data-capa="sim">
+<!-- ======================================================================
+ALTERNE PARA TESTAR:  data-tipo="rcp" | "patrimonial" data-capa="sim" | "nao"
+====================================================================== -->
+ 
+ 
+<!-- ======================= PÁGINA 1: CAPA ======================= -->
+<section class="pagina capa">
+    <div class="logo-topo">
+        <div class="logo branco">
+            <img src="img/neu-logo.png" alt="Neu Corretora de Seguros">
+        </div>
+    </div>
+ 
+    <div class="conteudo">
+        <div class="linha"></div>
+        <h1>Proposta<br>Comercial</h1>
+        <p class="tipo" data-campo="tipo_seguro">Seguro Patrimonial Empresarial</p>
+        <div class="cliente">
+            <small>Preparado exclusivamente para:</small>
+            <span data-campo="cliente_nome">Comércio Varejista de Alimentos Verde Vale Campina LTDA</span>
+        </div>
+        <p class="nota-legal" data-campo="nota_legal">
+            Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025,
+            garantindo total conformidade legal para as operações da sua empresa.
+        </p>
+    </div>
+</section>
+ 
+ 
+<!-- ======================= PÁGINA 2: DADOS DA PROPOSTA ======================= -->
+<section class="pagina">
+ 
+  <!-- Cabeçalho: aparece só quando data-capa="nao" (modelo RCP) -->
+    <header class="cabecalho so-sem-capa">
+        <div>
+            <h1>Proposta Comercial</h1>
+            <p data-campo="tipo_seguro_cabecalho">Seguro de Responsabilidade Civil Profissional (E&amp;O)</p>
+        </div>
+        <div class="logo">
+            <img src="img/neu-logo.png" alt="Neu Corretora de Seguros">
+        </div>
+    </header>
+ 
+    <div class="preparado so-sem-capa">
+        <small>Preparado exclusivamente para:</small>
+        <strong data-campo="cliente_nome_cabecalho">Costa e Costa Assessoria Contábil LTDA</strong>
+    </div>
+ 
+    <div class="bloco">
+        <h2 class="secao">Dados da Proposta</h2>
+        <p class="intro" data-campo="texto_introducao">
+        O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades
+        apresentadas, com o objetivo de oferecer a melhor relação entre proteção e investimento para a atividade de comercialização e armazenamento.
+        </p>
+ 
+        <ul class="destaques">
+        <!-- REPETIR: um <li> por destaque (título em <strong> + descrição) -->
+            <li>
+                <strong data-campo="destaque_titulo">Foco Estrutural e Responsabilidade Civil:</strong>
+                <span data-campo="destaque_texto">Mapeamento prioritário contra danos à infraestrutura física do imóvel e proteção financeira dedicada
+                    para eventuais danos materiais e corporais causados a terceiros durante a operação comercial.
+                </span>
+            </li>
+            <li>
+                <strong>Garantia de Valor de Novo:</strong>
+                Aplicação explícita de Cláusula de Valor de Novo nas coberturas aplicáveis, garantindo que, em situações de sinistro, a indenização seja
+                calculada pelo custo de reposição atual dos bens, sem dedução ou aplicação de depreciação pelo tempo de uso.
+            </li>
+        </ul>
+    </div>
+ 
+    <div class="bloco evitar-quebra">
+        <h2 class="secao so-rcp">Resumo do Risco</h2>
+ 
+        <!-- CARDS: use .cards.tres para 3 colunas (RCP) ou .cards para 2 colunas (Patrimonial) -->
+        <div class="cards">
+        <!-- REPETIR: um .card por informação -->
+            <div class="card">
+                <div class="rotulo">Dados da empresa</div>
+                <div class="valor">CNPJ: 26.073.725/0001-01</div>
+                <div class="detalhe">Av. Prof. Almeida Barreto, 790, São José, Campina Grande/PB - CEP: 58400-328</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Enquadramento do risco</div>
+                <div class="valor">Lojas/Depósitos, Supermercados</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Vigência da proposta</div>
+                <div class="valor">Validade de 5 dias (corridos)</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Valor em risco (prédio e conteúdo)</div>
+                <div class="valor">R$ 9.047.677,00</div>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Análise técnica em caixa (Patrimonial) -->
+    <div class="bloco evitar-quebra so-patrimonial">
+        <div class="caixa">
+            <div class="card rotulo" style="border:0;padding:0;margin-bottom:8px">Análise técnica</div>
+            <ul class="caixa-lista">
+            <!-- REPETIR: um <li> por ponto da análise -->
+                <li>Não houve sinistros nos últimos 12 meses;</li>
+                <li>Possui sistemas de segurança (extintores e circuito de câmeras);</li>
+                <li>Não possui outra apólice de seguro vigente para o mesmo risco.</li>
+            </ul>
+        </div>
+    </div>
+ 
+    <!-- Análise técnica e condições em texto (RCP) -->
+    <div class="bloco condicoes so-rcp">
+        <h2 class="secao">Análise Técnica e Condições</h2>
+    <!-- REPETIR: um <p> por condição -->
+        <p>
+            <strong>Base de Contratação:</strong>
+            Reclamação com notificação, com prazo complementar de 36 meses
+        </p>
+        <p>
+            <strong>Franquia Padrão:</strong>
+            8,00% dos prejuízos com mínimo de R$ 3.000,00 para o reclamante.
+        </p>
+        <p>
+            <strong>Principais Subcoberturas (100% do limite):</strong>
+            Extravio de Documentos, Danos Morais, Calúnia, Injúria e Difamação, Quebra de Sigilo, Lucros Cessantes e Gestão de Crise.
+        </p>
+        <p>
+            <strong>Atos Desonestos (Exclusivo PJ):</strong>
+            Cobertura de 10% do limite contratado.
+        </p>
+    </div>
+ 
+    <footer class="rodape" data-campo="nota_legal_rodape">
+        Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025, garantindo total conformidade legal
+        para as operações da sua empresa.
+    </footer>
+</section>
+ 
+ 
+<!-- ======================= PÁGINA 3: COMPARATIVO ======================= -->
+<section class="pagina">
+ 
+    <div class="bloco">
+        <h2 class="secao" data-campo="titulo_comparativo">Análise das Seguradoras</h2>
+        <p class="intro" data-campo="texto_comparativo">Abaixo, apresentamos o comparativo de mercado estruturado de forma personalizada:</p>
+ 
+        <!-- ===== TABELA PATRIMONIAL: comparação entre seguradoras ===== -->
+        <table class="comparativo so-patrimonial">
+            <thead>
+                <tr>
+                    <th>Condições de Pagamento</th>
+                    <!-- REPETIR: um <th> por seguradora -->
+                    <th>Allianz</th>
+                    <th>Sura</th>
+                </tr>
+            </thead>
+            <tbody>
+            <!-- REPETIR: uma <tr> por linha. Na coluna recomendada, use class="destaque" -->
+                <tr class="total"><td>Valor Total</td><td class="destaque">R$ 19.765,84</td><td>R$ 44.835,32</td></tr>
+                <tr><td>4 parcelas (Boleto)</td><td class="destaque">R$ 4.941,46</td><td>R$ 11.206,83</td></tr>
+                <tr><td>Outro parcelamento</td>
+                <td class="destaque">R$ 2.823,70<span class="secundario">(7x - Débito em conta)</span></td>
+                <td>R$ 7.427,57<span class="secundario">(6x - Boleto)</span></td></tr>
+            </tbody>
+        </table>
+ 
+    <!-- ===== TABELA RCP: comparação entre opções de limite ===== -->
+        <table class="comparativo so-rcp">
+            <thead>
+                <tr>
+                    <th>Detalhes da Cobertura</th>
+                    <th>Opção 1</th><th>Opção 2</th><th>Opção 3</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Limite Máximo de Garantia (LMG)</td><td class="destaque">R$ 1.000.000,00</td><td>R$ 500.000,00</td><td>R$ 300.000,00</td></tr>
+                <tr><td>RC Profissional (Acordos/Indenizações)</td><td class="destaque">R$ 800.000,00</td><td>R$ 400.000,00</td><td>R$ 210.000,00</td></tr>
+                <tr><td>LMI Gastos com Defesa</td><td class="destaque">R$ 200.000,00</td><td>R$ 100.000,00</td><td>R$ 90.000,00</td></tr>
+                <tr><td>Condições de Pagamento</td><td colspan="3">7x no Boleto Bancário</td></tr>
+                <tr class="total"><td>Valor por parcela</td><td class="destaque">R$ 1.817,75</td><td>R$ 954,30</td><td>R$ 758,74</td></tr>
+            </tbody>
+        </table>
+ 
+        <p class="nota" data-campo="nota_tabela">As propostas detalhadas de cada Seguradora se encontram no final desse documento.</p>
+    </div>
+ 
+    <div class="bloco evitar-quebra">
+        <h2 class="secao">Recomendação Técnica</h2>
+        <div class="recomendacao" data-campo="recomendacao_texto">
+            Para este perfil de risco específico, a seguradora <strong>Allianz</strong> apresenta o melhor equilíbrio técnico e comercial entre
+            investimento, coberturas e limites de garantias.
+        </div>
+    </div>
+ 
+    <footer class="rodape">
+        Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025, garantindo total conformidade legal
+        para as operações da sua empresa.
+    </footer>
+</section>
+ 
+ 
+<!-- ======================= PÁGINA 4: RISCOS + DIFERENCIAIS ======================= -->
+<section class="pagina">
+ 
+    <div class="bloco">
+        <h2 class="secao" data-campo="titulo_riscos">Gerenciamento de Riscos</h2>
+        <p class="intro" data-campo="texto_riscos_intro">
+        Para garantir a plena eficácia das coberturas securitárias e a segurança contínua da operação, recomendamos as seguintes diretrizes preventivas:
+        </p>
+ 
+        <div class="caixa">
+        <ul class="caixa-lista">
+        <!-- REPETIR: uma recomendação por <li> (título em <strong>) -->
+            <li>
+                <strong>Instalações Elétricas:</strong>
+                Adequar toda a fiação elétrica aparente, protegendo-a por meio de eletrodutos e/ou eletrocalhas rígidas
+            </li>
+            <li>
+                <strong>Extintores de Incêndio:</strong>
+                Realizar a recarga dos extintores quando necessária (mantendo conformidade com as normas da ABNT) e garantir que permaneçam desobstruídos
+                e com livre acesso. É indispensável o envio da Nota Fiscal válida da manutenção.
+            </li>
+            <li>
+                <strong>Armazenamento de Materiais:</strong>
+                Organizar e manter mercadorias e matérias-primas com distância mínima de 1 (um) metro em relação a luminárias, cobertura (telhado),
+                estruturas metálicas, instalações elétricas e fontes de calor.
+            </li>
+            <li>
+                <strong>Corredores de Circulação:</strong>
+                Manter os corredores livres e organizados, preservando largura mínima de 1 (um) metro para facilitar a circulação e o acesso aos
+                equipamentos de combate a incêndio.
+            </li>
+        </ul>
+        </div>
+    </div>
+ 
+    <div class="bloco evitar-quebra">
+        <h2 class="secao">Por que escolher a Neu Corretora?</h2>
+        <p class="intro">Nossa corretora atua lado a lado com sua empresa. Entregamos muito mais do que uma apólice; entregamos uma parceria
+            estratégica através de:</p>
+        <div class="grade">
+            <div class="item">Atendimento 100% consultivo</div>
+            <div class="item">Acompanhamento proativo anual</div>
+            <div class="item">Especialistas em riscos empresariais</div>
+            <div class="item">Revisão estratégica das coberturas</div>
+            <div class="item">Apoio integral e ágil em sinistros</div>
+            <div class="item">Atendimento personalizado</div>
+        </div>
+    </div>
+ 
+  <!-- Assinatura em texto: usada no RCP, onde não há página final dedicada -->
+    <div class="assinatura so-sem-capa">
+        <p class="intro">Agradecemos a oportunidade de apresentar nossa proposta. Ficamos à inteira disposição para esclarecimentos adicionais, dúvidas técnicas e ajustes que se façam necessários.</p>
+        <div class="nome">Maria Neuresy Araújo</div>
+        <div class="cargo">Corretora de Seguros | SUSEP: 212131246</div>
+        <div class="contato">
+        <strong>Neu Corretora de Seguros</strong><br>
+        Telefones: (83) 98896-1030 | (83) 99100-7297<br>
+        E-mail: maria.neuresy@neucorretora.com.br<br>
+        Endereço: R. Prof. Joaquim Santiago, 22, sala 204 - Expedicionários, João Pessoa-PB - CEP 58041-030
+        </div>
+    </div>
+ 
+    <footer class="rodape">
+        Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025, garantindo total conformidade legal
+        para as operações da sua empresa.
+    </footer>
+</section>
+ 
+ 
+<!-- ======================= PÁGINA 5: ENCERRAMENTO (só com capa) ======================= -->
+<section class="pagina final" id="pagina-final">
+    <div class="topo">
+        <h2>Agradecemos a oportunidade de apresentar nossa proposta.</h2>
+        <p class="subtitulo">Ficamos à inteira disposição para esclarecimentos adicionais e ajustes que se façam necessários.</p>
+    </div>
+ 
+    <div class="assina">
+        <strong data-campo="corretor_nome">Maria Neuresy Araújo</strong>
+        <span>SUSEP: <span data-campo="corretor_susep">212131246</span></span>
+    </div>
+ 
+    <div class="contato-box">
+        <div class="logo branco">
+            <img src="img/neu-logo.png" alt="Neu Corretora de Seguros">
+        </div>
+        <p>(83) 98896-1030 | (83) 99100-7297</p>
+        <p>neucorretora@neucorretora.com.br</p>
+        <p class="endereco">R. Prof. Joaquim Santiago, 22, sala 204<br>Expedicionários, João Pessoa-PB - CEP 58041-030</p>
+    </div>
+</section>
+ 
+<style>
+  /* A página final só existe no modelo com capa */
+    body[data-capa="nao"] #pagina-final{ display:none !important; }
+</style>
+ 
+</body>
+</html>

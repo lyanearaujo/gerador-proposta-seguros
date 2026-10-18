@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerador de Propostas</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="titulo">
+    <h1>Gerador de Propostas</h1>
+    <p>Preencha o formulário. A proposta aparece ao lado e já fica pronta para virar PDF.</p>
+  </div>
+  <div class="acoes">
+    <button type="button" id="btnNovo" class="sec">Nova proposta</button>
+    <button type="button" id="btnExemplo" class="sec">Carregar exemplo</button>
+    <button type="button" id="btnSalvar" class="sec">Salvar arquivo</button>
+    <button type="button" id="btnAbrir" class="sec">Abrir arquivo</button>
+    <input type="file" id="arquivo" accept=".json,application/json" hidden>
+    <button type="button" id="btnPdf" class="pri">Baixar PDF</button>
+  </div>
+</header>
+<p class="dica-pdf">Ao clicar em <strong>Baixar PDF</strong>, na janela que abrir escolha <strong>Destino: Salvar como PDF</strong>, <strong>Margens: Nenhuma</strong> e desmarque <strong>Cabeçalhos e rodapés</strong>.</p>
+
+<main class="layout">
+
+  <form id="form" autocomplete="off" onsubmit="return false">
+
+    <details open>
+      <summary>1. Tipo de proposta</summary>
+      <div class="conteudo">
+        <div class="opcoes">
+          <label class="opcao"><input type="radio" name="tipo" value="rcp"> <span>RC Profissional (E&amp;O)</span></label>
+          <label class="opcao"><input type="radio" name="tipo" value="patrimonial"> <span>Patrimonial Empresarial</span></label>
+        </div>
+        <label class="check"><input type="checkbox" id="capa"> Incluir capa e página final</label>
+      </div>
+    </details>
+
+    <details open>
+      <summary>2. Dados do cliente</summary>
+      <div class="conteudo">
+        <label>Nome da empresa <input type="text" data-path="cliente" placeholder="Ex.: Costa e Costa Assessoria Contábil LTDA"></label>
+        <label>CNPJ <input type="text" data-path="cnpj" data-mask="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"></label>
+        <label id="campo-endereco">Endereço (opcional) <input type="text" data-path="endereco" placeholder="Rua, número, bairro, cidade/UF - CEP"></label>
+      </div>
+    </details>
+
+    <details>
+      <summary>3. Abertura e destaques</summary>
+      <div class="conteudo">
+        <label>Subtítulo do seguro <input type="text" data-path="c.tipoTexto"></label>
+        <label>Texto de abertura <textarea rows="4" data-path="c.intro"></textarea></label>
+        <p class="ajuda">Destaques principais (aparecem como tópicos):</p>
+        <div id="lista-destaques" class="lista"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>4. Resumo do risco</summary>
+      <div class="conteudo">
+        <p class="ajuda" id="dica-cards"></p>
+        <div id="lista-cards" class="lista"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary id="tit-analise">5. Análise técnica</summary>
+      <div class="conteudo">
+        <p class="ajuda" id="dica-analise"></p>
+        <div id="lista-analise" class="lista"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>6. Comparativo de valores e coberturas</summary>
+      <div class="conteudo">
+        <label>Título da seção <input type="text" data-path="c.tituloComp"></label>
+        <label>Texto antes da tabela <textarea rows="3" data-path="c.textoComp"></textarea></label>
+        <label>Nome da 1ª coluna (a das descrições) <input type="text" data-path="c.primeiraColuna"></label>
+        <div id="editor-tabela"></div>
+        <p class="ajuda">
+          <strong>Dicas:</strong> digite só números (ex.: 19765,84) e o sistema coloca "R$" e os pontos.
+          Para escrever um detalhe em cinza abaixo do valor, use a barra: <em>R$ 2.823,70 | (7x - Débito em conta)</em>.
+          Se preencher só a 1ª coluna de uma linha, o texto ocupa a linha inteira.
+        </p>
+        <label>Nota abaixo da tabela (opcional) <textarea rows="2" data-path="c.notaTabela"></textarea></label>
+      </div>
+    </details>
+
+    <details>
+      <summary>7. Recomendação técnica</summary>
+      <div class="conteudo">
+        <label>Texto da recomendação <textarea rows="4" data-path="c.recomendacao"></textarea></label>
+        <p class="ajuda">Para deixar uma palavra em negrito, coloque entre dois asteriscos: **Allianz**</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>8. Gerenciamento de riscos</summary>
+      <div class="conteudo">
+        <label>Título da seção <input type="text" data-path="c.tituloRiscos"></label>
+        <label>Texto de abertura <textarea rows="3" data-path="c.introRiscos"></textarea></label>
+        <div id="lista-riscos" class="lista"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>9. Corretora e rodapé (configuração fixa)</summary>
+      <div class="conteudo">
+        <p class="ajuda">Estes dados ficam salvos neste computador e valem para todas as propostas.</p>
+        <label>Nome do corretor(a) <input type="text" data-path="corr.nome"></label>
+        <label>SUSEP <input type="text" data-path="corr.susep"></label>
+        <label>Nome da corretora <input type="text" data-path="corr.empresa"></label>
+        <label>Telefones <input type="text" data-path="corr.telefones"></label>
+        <label>E-mail <input type="text" data-path="corr.email"></label>
+        <label>Endereço - linha 1 <input type="text" data-path="corr.end1"></label>
+        <label>Endereço - linha 2 <input type="text" data-path="corr.end2"></label>
+        <label>Aviso legal do rodapé (deixe vazio para não mostrar) <textarea rows="3" data-path="c.notaLegal"></textarea></label>
+        <p class="ajuda">Diferenciais da corretora ("Por que escolher..."):</p>
+        <div id="lista-dif" class="lista"></div>
+      </div>
+    </details>
+
+  </form>
+
+  <section id="previewWrap" aria-label="Pré-visualização da proposta">
+    <div id="escala"><iframe id="preview" title="Pré-visualização da proposta"></iframe></div>
+  </section>
+
+</main>
+
+<div id="aviso" class="toast" hidden></div>
+
+<script src="gerador.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
