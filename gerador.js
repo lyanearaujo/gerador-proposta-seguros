@@ -6,9 +6,6 @@
    2) conteudoPadrao(tipo) .... textos prontos de cada tipo de seguro
    3) montarProposta(e, c) .... gera o HTML da proposta (mesma estrutura
                                 do seu proposta.html + proposta.css)
-
-   >>> Se você mudar o layout no proposta.html, ajuste a função
-       montarProposta() abaixo para ficar igual.
    ===================================================================== */
 
 const CORRETORA_PADRAO = {
@@ -31,11 +28,6 @@ const CORRETORA_PADRAO = {
 
 const LEI_NOTA = 'Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025, garantindo total conformidade legal para as operações da sua empresa.';
 
-/* ---------------------------------------------------------------------
-   Textos prontos por tipo de seguro.  Edite à vontade: são só o ponto
-   de partida; a corretora pode alterar tudo no formulário.
-   Use [COLCHETES] onde falta preencher: o sistema avisa antes do PDF.
-   --------------------------------------------------------------------- */
 function conteudoPadrao(tipo) {
   if (tipo === 'rcp') {
     return {
@@ -129,7 +121,6 @@ function estadoPadrao(tipo) {
   };
 }
 
-/* Preenche o tipo atual com os dados das propostas de exemplo */
 function aplicarExemplo(e) {
   const d = e.conteudo[e.tipo];
   if (e.tipo === 'rcp') {
@@ -181,11 +172,9 @@ function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-/* texto com **negrito** e quebras de linha */
 function rich(s) {
   return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
-/* célula da tabela: "valor | detalhe em cinza" */
 function cel(v) {
   const partes = String(v || '').split('|');
   const a = partes[0].trim();
@@ -194,34 +183,55 @@ function cel(v) {
   return esc(a || '—') + (b ? '<span class="secundario">' + esc(b) + '</span>' : '');
 }
 
-function cnpjValido(s) {
+function cpfCnpjValido(s) {
   const n = String(s || '').replace(/\D/g, '');
-  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false;
-  const dv = function (base) {
-    let soma = 0, peso = base.length - 7;
-    for (let i = 0; i < base.length; i++) {
-      soma += base[i] * peso--;
-      if (peso < 2) peso = 9;
-    }
-    const r = soma % 11;
-    return r < 2 ? 0 : 11 - r;
-  };
-  const b = n.slice(0, 12).split('').map(Number);
-  const d1 = dv(b);
-  const d2 = dv(b.concat(d1));
-  return d1 === Number(n[12]) && d2 === Number(n[13]);
+  if (n.length === 11) {
+    if (/^(\d)\1+$/.test(n)) return false;
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(n.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(n.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(n.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(n.substring(10, 11))) return false;
+    return true;
+  } else if (n.length === 14) {
+    if (/^(\d)\1+$/.test(n)) return false;
+    const dv = function(base) {
+      let soma = 0, peso = base.length - 7;
+      for (let i = 0; i < base.length; i++) {
+        soma += base[i] * peso--;
+        if (peso < 2) peso = 9;
+      }
+      const r = soma % 11;
+      return r < 2 ? 0 : 11 - r;
+    };
+    const b = n.slice(0, 12).split('').map(Number);
+    const d1 = dv(b);
+    const d2 = dv(b.concat(d1));
+    return d1 === Number(n[12]) && d2 === Number(n[13]);
+  }
+  return false;
 }
 
-function mascaraCnpj(v) {
-  const n = String(v).replace(/\D/g, '').slice(0, 14);
-  return n
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2');
+function mascaraCpfCnpj(v) {
+  let n = String(v).replace(/\D/g, '');
+  if (n.length <= 11) {
+    return n.replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  } else {
+    n = n.slice(0, 14);
+    return n.replace(/^(\d{2})(\d)/, '$1.$2')
+            .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+            .replace(/\.(\d{3})(\d)/, '.$1/$2')
+            .replace(/(\d{4})(\d)/, '$1-$2');
+  }
 }
 
-/* "19765,84" ou "19765.84" ou "1.000.000" -> "R$ 19.765,84" (só se for número puro) */
 function dinheiroSeNumerico(txt) {
   const s = String(txt || '').trim().replace(/^R\$\s*/i, '');
   if (!s || !/^[\d.,]+$/.test(s)) return txt;
@@ -258,8 +268,9 @@ function validarProposta(e) {
   const d = e.conteudo[e.tipo];
   const p = [];
   if (!e.cliente.trim()) p.push('Falta o nome do cliente.');
-  if (!e.cnpj.trim()) p.push('Falta o CNPJ.');
-  else if (!cnpjValido(e.cnpj)) p.push('O CNPJ digitado parece inválido (confira os números).');
+  if (!e.cnpj.trim()) p.push(e.tipo === 'rcp' ? 'Falta o CPF/CNPJ.' : 'Falta o CNPJ.');
+  else if (!cpfCnpjValido(e.cnpj)) p.push(e.tipo === 'rcp' ? 'O CPF/CNPJ digitado parece inválido (confira os números).' : 'O CNPJ digitado parece inválido (confira os números).');
+  
   d.cards.forEach(function (c) {
     if ((c.r || c.d) && !String(c.v).trim()) p.push('O quadro "' + (c.r || 'sem título') + '" está sem valor.');
   });
@@ -281,7 +292,6 @@ function validarProposta(e) {
 
 /* ---------------------------------------------------------------------
    MONTAGEM DO HTML DA PROPOSTA  (espelha o seu proposta.html)
-   e = estado da proposta   c = dados da corretora
    --------------------------------------------------------------------- */
 function montarProposta(e, c) {
   const d = e.conteudo[e.tipo];
@@ -290,6 +300,10 @@ function montarProposta(e, c) {
   const logo = '<img src="img/neu-logo.png" alt="' + esc(c.empresa) + '">';
   const rodape = '<footer class="rodape">' + rich(d.notaLegal) + '</footer>';
   const enderecoUnico = [c.end1, c.end2].filter(Boolean).join(' - ');
+
+  const numDoc = e.cnpj.replace(/\D/g, '');
+  const rotuloDoc = (numDoc.length <= 11 && numDoc.length > 0) ? 'CPF: ' : 'CNPJ: ';
+  const tituloDoc = (rcp && numDoc.length <= 11) ? 'Dados do profissional' : 'Dados da empresa';
 
   /* ---- Capa ---- */
   const capa = !e.capa ? '' : `
@@ -310,10 +324,11 @@ function montarProposta(e, c) {
   /* ---- Página: dados da proposta ---- */
   const destaques = d.destaques.filter(function (x) { return x.t || x.x; });
   const cards = [{
-    r: 'Dados da empresa',
-    v: 'CNPJ: ' + (e.cnpj.trim() || '—'),
+    r: tituloDoc,
+    v: rotuloDoc + (e.cnpj.trim() || '—'),
     d: e.endereco.trim()
   }].concat(d.cards.filter(function (x) { return x.r || x.v || x.d; }));
+  
   const cardsHtml = cards.map(function (x) {
     return '<div class="card"><div class="rotulo">' + esc(x.r) + '</div>' +
       '<div class="valor">' + esc(x.v || '—') + '</div>' +
@@ -398,7 +413,7 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* ---- Página: riscos + diferenciais (+ assinatura se não houver capa) ---- */
+  /* ---- Página: riscos + diferenciais ---- */
   const riscos = d.riscos.filter(function (x) { return x.t || x.x; });
   const difs = c.diferenciais.filter(function (x) { return x.x && x.x.trim(); });
 
@@ -439,7 +454,7 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* ---- Página final (só com capa) ---- */
+  /* ---- Página final ---- */
   const final = !e.capa ? '' : `
 <section class="pagina final" id="pagina-final">
   <div class="topo">
@@ -463,5 +478,5 @@ function montarProposta(e, c) {
 
 if (typeof module !== 'undefined') {
   module.exports = { CORRETORA_PADRAO, conteudoPadrao, estadoPadrao, aplicarExemplo, montarProposta,
-    cnpjValido, mascaraCnpj, dinheiroSeNumerico, nomeArquivo, validarProposta };
+    cpfCnpjValido, mascaraCpfCnpj, dinheiroSeNumerico, nomeArquivo, validarProposta };
 }

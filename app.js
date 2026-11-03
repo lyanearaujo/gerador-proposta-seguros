@@ -40,20 +40,16 @@ function normalizarEstado(obj) {
     patrimonial: Object.assign(conteudoPadrao('patrimonial'), (obj.conteudo || {}).patrimonial || {})
   };
   
-  // Correção do cache antigo: O rascunho v1 não tinha a nota legal no RCP.
-  // Aqui a gente força a nota legal do RCP caso ela esteja vazia no rascunho.
   if ((e.versao === 1 || !e.versao) && e.conteudo.rcp.notaLegal === '') {
     e.conteudo.rcp.notaLegal = LEI_NOTA;
   }
   e.versao = 2;
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  // Agora a capa é sempre verdadeira como padrão
   e.capa = true;
   return e;
 }
 
-// Verifica se existe rascunho na v2, senão tenta puxar da v1
 let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v1');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
@@ -96,7 +92,7 @@ function atualizarPreview() {
   doc.body.innerHTML = montarProposta(estado, corretora);
   doc.title = nomeArquivo(estado);
   ajustarPreview();
-  setTimeout(ajustarPreview, 400); /* depois das imagens carregarem */
+  setTimeout(ajustarPreview, 400);
 }
 
 function mudou() {
@@ -107,7 +103,7 @@ function mudou() {
 }
 
 frame.addEventListener('load', function () {
-  if (!frame.contentDocument.querySelector('link')) return; /* ignora o about:blank inicial */
+  if (!frame.contentDocument.querySelector('link')) return;
   framePronto = true;
   atualizarPreview();
 });
@@ -128,14 +124,14 @@ $('#form').addEventListener('input', function (ev) {
   const t = ev.target;
   const p = t.dataset ? t.dataset.path : null;
   if (!p) return;
-  if (t.dataset.mask === 'cnpj') t.value = mascaraCnpj(t.value);
+  if (t.dataset.mask === 'cnpj') t.value = mascaraCpfCnpj(t.value);
   const r = resolver(p);
   r.obj[r.chave] = t.value;
   if (p.indexOf('corr.') === 0) gravarLS(LS_CORRETORA, corretora);
   mudou();
 });
 
-/* ---------- editor de listas (quadros, tópicos, destaques...) ---------- */
+/* ---------- editor de listas ---------- */
 function editorLista(cont, arr, campos, novo, rotuloAdd) {
   cont.innerHTML = '';
   arr.forEach(function (item, i) {
@@ -254,12 +250,18 @@ function sincronizarForm() {
   });
 
   $('#tit-analise').textContent = 'Análise técnica';
-  // Dica unificada para o novo layout em caixa branca
   $('#dica-analise').textContent = 'Escreva os pontos principais da análise do risco. Você pode deixar o título vazio e preencher só o texto, ou usar os dois.';
   
+  const lblDoc = $('#label-doc');
+  if (lblDoc) {
+    lblDoc.firstChild.textContent = rcp ? 'CPF/CNPJ ' : 'CNPJ ';
+    $('[data-path="cnpj"]').placeholder = rcp ? '000.000.000-00 ou 00.000.000/0000-00' : '00.000.000/0000-00';
+  }
+
   $('#dica-cards').textContent = rcp
-    ? 'O primeiro quadro (CNPJ) é automático. Aqui entram os demais: enquadramento, faturamento, vigência, retroatividade...'
+    ? 'O primeiro quadro (CPF/CNPJ) é automático. Aqui entram os demais: enquadramento, faturamento, vigência, retroatividade...'
     : 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, vigência, valor em risco...';
+    
   $('#campo-endereco').hidden = rcp;
 
   editorLista($('#lista-destaques'), d.destaques,
@@ -270,7 +272,6 @@ function sincronizarForm() {
     [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência e validade' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 04/09/2026 a 04/09/2027' }, { k: 'd', rot: 'Detalhe (opcional)', ph: 'Ex.: Retroatividade: 04/09/23' }],
     function () { return { r: '', v: '', d: '' }; }, 'Adicionar quadro');
 
-  // Agora a análise técnica usa os dois campos (título e texto) para os dois tipos de seguro!
   editorLista($('#lista-analise'), d.analise,
     [{ k: 't', rot: 'Título em negrito (opcional)', ph: 'Ex.: Franquia Padrão:' }, { k: 'x', rot: 'Texto', longo: true }],
     function () { return { t: '', x: '' }; }, 'Adicionar ponto da análise');
@@ -287,14 +288,13 @@ function sincronizarForm() {
   atualizarPreview();
 }
 
-/* diferenciais pertencem à corretora: grava junto (ligado uma vez só) */
 $('#lista-dif').addEventListener('input', function () { gravarLS(LS_CORRETORA, corretora); });
 
 /* ---------- eventos do topo do formulário ---------- */
 $$('input[name="tipo"]').forEach(function (r) {
   r.addEventListener('change', function () {
     estado.tipo = r.value;
-    estado.capa = true; /* Força a capa como padrão ao mudar de seguro */
+    estado.capa = true;
     $('#capa').checked = true;
     sincronizarForm();
     mudou();
