@@ -1,10 +1,9 @@
 'use strict';
 /* =====================================================================
-   app.js  -  a tela: formulário, prévia, rascunho automático e PDF.
-   Depende de gerador.js (carregado antes no index.html).
+   core/tela.js  -  Controle da interface, prévia, rascunho e PDF
    ===================================================================== */
 
-const LS_RASCUNHO = 'neu_proposta_rascunho_v2'; // Mudou para v2 para atualizar o cache
+const LS_RASCUNHO = 'neu_proposta_rascunho_v3';
 const LS_CORRETORA = 'neu_corretora_v1';
 
 const $ = function (s, r) { return (r || document).querySelector(s); };
@@ -23,34 +22,38 @@ function h(tag, props, kids) {
   return e;
 }
 
-/* ---------- armazenamento (à prova de navegador bloqueado) ---------- */
 function lerLS(chave) { try { return JSON.parse(localStorage.getItem(chave)); } catch (_) { return null; } }
 function gravarLS(chave, v) { try { localStorage.setItem(chave, JSON.stringify(v)); } catch (_) { /* ignora */ } }
 
 /* ---------- estado ---------- */
 let corretora = Object.assign({}, CORRETORA_PADRAO, lerLS(LS_CORRETORA) || {});
-if (!Array.isArray(corretora.diferenciais)) corretora.diferenciais = CORRETORA_PADRAO.diferenciais.map(function (x) { return Object.assign({}, x); });
+if (!Array.isArray(corretora.diferenciais)) {
+  corretora.diferenciais = CORRETORA_PADRAO.diferenciais.map(function (x) { return Object.assign({}, x); });
+}
 
 function normalizarEstado(obj) {
   const base = estadoPadrao(obj && obj.tipo);
   if (!obj) return base;
   const e = Object.assign(base, obj);
-  e.conteudo = {
-    rcp: Object.assign(conteudoPadrao('rcp'), (obj.conteudo || {}).rcp || {}),
-    patrimonial: Object.assign(conteudoPadrao('patrimonial'), (obj.conteudo || {}).patrimonial || {})
-  };
-  
-  if ((e.versao === 1 || !e.versao) && e.conteudo.rcp.notaLegal === '') {
-    e.conteudo.rcp.notaLegal = LEI_NOTA;
-  }
-  e.versao = 2;
+
+  Object.keys(window.PRODUTOS).forEach(function (k) {
+    const padrao = conteudoPadrao(k);
+    const salvo = (obj.conteudo || {})[k] || {};
+    e.conteudo[k] = Object.assign(padrao, salvo);
+    if (padrao.coberturasSelecionadas && !Array.isArray(e.conteudo[k].coberturasSelecionadas)) {
+      e.conteudo[k].coberturasSelecionadas = padrao.coberturasSelecionadas.slice();
+    }
+    if (padrao.coberturasCustom && typeof e.conteudo[k].coberturasCustom !== 'object') {
+      e.conteudo[k].coberturasCustom = Object.assign({}, padrao.coberturasCustom);
+    }
+  });
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  e.capa = true;
+  e.versao = 3;
   return e;
 }
 
-let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v1');
+let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v2') || lerLS('neu_proposta_rascunho_v1');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
 
@@ -73,7 +76,7 @@ function ajustarPreview() {
   const doc = frame.contentDocument;
   if (!doc || !doc.documentElement) return;
   const wrap = $('#previewWrap');
-  const larg = 794; /* 210 mm */
+  const larg = 794;
   const alt = doc.documentElement.scrollHeight;
   const esc = Math.min(1, (wrap.clientWidth - 24) / larg);
   frame.style.width = larg + 'px';
@@ -110,6 +113,21 @@ frame.addEventListener('load', function () {
 frame.srcdoc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><link rel="stylesheet" href="proposta.css"></head><body></body></html>';
 window.addEventListener('resize', ajustarPreview);
 
+/* ---------- montagem dinâmica do menu de produtos ---------- */
+function montarMenuTipos() {
+  const cont = $('#lista-tipos');
+  cont.innerHTML = '';
+  Object.values(window.PRODUTOS).forEach(function (prod) {
+    const rad = h('input', { type: 'radio', name: 'tipo', value: prod.id });
+    rad.addEventListener('change', function () {
+      estado.tipo = prod.id;
+      sincronizarForm();
+      mudou();
+    });
+    cont.append(h('label', { class: 'opcao' }, [rad, h('span', { text: prod.nomeMenu })]));
+  });
+}
+
 /* ---------- ligação campo <-> estado ---------- */
 function resolver(path) {
   const partes = path.split('.');
@@ -130,6 +148,63 @@ $('#form').addEventListener('input', function (ev) {
   if (p.indexOf('corr.') === 0) gravarLS(LS_CORRETORA, corretora);
   mudou();
 });
+
+/* ---------- editor de coberturas (caixinhas por grupo) ---------- */
+function editorCoberturas(prod) {
+  const sec = $('#secao-coberturas');
+  const cont = $('#lista-coberturas');
+  if (!prod.gruposCoberturas) {
+    sec.hidden = true;
+    cont.innerHTML = '';
+    return;
+  }
+  sec.hidden = false;
+  cont.innerHTML = '';
+
+  const d = conteudo();
+  if (!Array.isArray(d.coberturasSelecionadas)) d.coberturasSelecionadas = [];
+  if (!d.coberturasCustom) d.coberturasCustom = {};
+
+  prod.gruposCoberturas.forEach(function (g) {
+    const box = h('div', { class: 'grupo-check' });
+    box.append(h('div', { class: 'grupo-titulo', text: g.grupo }));
+
+    g.itens.forEach(function (it) {
+      const marcado = d.coberturasSelecionadas.indexOf(it.id) >= 0;
+      const chk = h('input', { type: 'checkbox' });
+      chk.checked = marcado;
+
+      let campoCustom = null;
+      if (it.customizavel) {
+        campoCustom = h('textarea', {
+          rows: 2,
+          placeholder: it.placeholder || 'Descreva a cobertura...',
+          class: 'campo-cob-custom'
+        });
+        campoCustom.value = d.coberturasCustom[it.id] || '';
+        campoCustom.hidden = !marcado;
+        campoCustom.addEventListener('input', function () {
+          d.coberturasCustom[it.id] = campoCustom.value;
+          mudou();
+        });
+      }
+
+      chk.addEventListener('change', function () {
+        const idx = d.coberturasSelecionadas.indexOf(it.id);
+        if (chk.checked && idx < 0) d.coberturasSelecionadas.push(it.id);
+        if (!chk.checked && idx >= 0) d.coberturasSelecionadas.splice(idx, 1);
+        if (campoCustom) campoCustom.hidden = !chk.checked;
+        mudou();
+      });
+
+      const lbl = h('label', { class: 'check cob-item' }, [chk, h('span', { text: it.nome })]);
+      box.append(lbl);
+      if (campoCustom) box.append(campoCustom);
+    });
+
+    cont.append(box);
+  });
+}
 
 /* ---------- editor de listas ---------- */
 function editorLista(cont, arr, campos, novo, rotuloAdd) {
@@ -236,10 +311,10 @@ function editorTabela() {
   cont.append(addLinha);
 }
 
-/* ---------- sincroniza o formulário inteiro com o estado ---------- */
+/* ---------- sincroniza o formulário inteiro ---------- */
 function sincronizarForm() {
+  const prod = obterProduto(estado.tipo);
   const d = conteudo();
-  const rcp = estado.tipo === 'rcp';
 
   $$('input[name="tipo"]').forEach(function (r) { r.checked = r.value === estado.tipo; });
   $('#capa').checked = estado.capa;
@@ -249,31 +324,35 @@ function sincronizarForm() {
     inp.value = r.obj[r.chave] || '';
   });
 
-  $('#tit-analise').textContent = 'Análise técnica';
-  $('#dica-analise').textContent = 'Escreva os pontos principais da análise do risco. Você pode deixar o título vazio e preencher só o texto, ou usar os dois.';
-  
   const lblDoc = $('#label-doc');
   if (lblDoc) {
-    lblDoc.firstChild.textContent = rcp ? 'CPF/CNPJ ' : 'CNPJ ';
-    $('[data-path="cnpj"]').placeholder = rcp ? '000.000.000-00 ou 00.000.000/0000-00' : '00.000.000/0000-00';
+    lblDoc.firstChild.textContent = prod.aceitaCpf ? 'CPF/CNPJ ' : 'CNPJ ';
+    $('[data-path="cnpj"]').placeholder = prod.aceitaCpf ? '000.000.000-00 ou 00.000.000/0000-00' : '00.000.000/0000-00';
   }
 
-  $('#dica-cards').textContent = rcp
-    ? 'O primeiro quadro (CPF/CNPJ) é automático. Aqui entram os demais: enquadramento, faturamento, vigência, retroatividade...'
-    : 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, vigência, valor em risco...';
-    
-  $('#campo-endereco').hidden = rcp;
+  $('#dica-cards').textContent = prod.dicaCards || '';
+  $('#campo-endereco').hidden = !prod.mostraEndereco;
+  $('#dica-analise').textContent = 'Escreva os pontos principais da análise do risco. Você pode deixar o título vazio e preencher só o texto, ou usar os dois.';
+
+  editorCoberturas(prod);
+
+  /* Renumera os passos automaticamente conforme a seção 5 exista ou não */
+  let num = prod.gruposCoberturas ? 6 : 5;
+  $$('.sec-numerada').forEach(function (el) {
+    el.textContent = num + '. ' + el.dataset.titulo;
+    num += 1;
+  });
 
   editorLista($('#lista-destaques'), d.destaques,
-    [{ k: 't', rot: 'Título em negrito', ph: 'Ex.: Foco na Proteção Profissional:' }, { k: 'x', rot: 'Texto', longo: true }],
+    [{ k: 't', rot: 'Título em negrito', ph: 'Ex.: Foco Estrutural:' }, { k: 'x', rot: 'Texto', longo: true }],
     function () { return { t: '', x: '' }; }, 'Adicionar destaque');
 
   editorLista($('#lista-cards'), d.cards,
-    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência e validade' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 04/09/2026 a 04/09/2027' }, { k: 'd', rot: 'Detalhe (opcional)', ph: 'Ex.: Retroatividade: 04/09/23' }],
+    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 5 dias' }, { k: 'd', rot: 'Detalhe (opcional)', ph: '' }],
     function () { return { r: '', v: '', d: '' }; }, 'Adicionar quadro');
 
   editorLista($('#lista-analise'), d.analise,
-    [{ k: 't', rot: 'Título em negrito (opcional)', ph: 'Ex.: Franquia Padrão:' }, { k: 'x', rot: 'Texto', longo: true }],
+    [{ k: 't', rot: 'Título em negrito (opcional)', ph: '' }, { k: 'x', rot: 'Texto', longo: true }],
     function () { return { t: '', x: '' }; }, 'Adicionar ponto da análise');
 
   editorTabela();
@@ -285,26 +364,16 @@ function sincronizarForm() {
   editorLista($('#lista-dif'), corretora.diferenciais,
     [{ k: 'x', rot: 'Diferencial' }],
     function () { return { x: '' }; }, 'Adicionar diferencial');
+
   atualizarPreview();
 }
 
 $('#lista-dif').addEventListener('input', function () { gravarLS(LS_CORRETORA, corretora); });
-
-/* ---------- eventos do topo do formulário ---------- */
-$$('input[name="tipo"]').forEach(function (r) {
-  r.addEventListener('change', function () {
-    estado.tipo = r.value;
-    estado.capa = true;
-    $('#capa').checked = true;
-    sincronizarForm();
-    mudou();
-  });
-});
 $('#capa').addEventListener('change', function () { estado.capa = $('#capa').checked; mudou(); });
 
 /* ---------- botões ---------- */
 $('#btnNovo').addEventListener('click', function () {
-  if (!confirm('Começar uma proposta nova? O que está na tela será apagado (salve em arquivo antes, se quiser guardar).')) return;
+  if (!confirm('Começar uma proposta nova? O que está na tela será apagado.')) return;
   estado = estadoPadrao(estado.tipo);
   sincronizarForm();
   mudou();
@@ -326,7 +395,7 @@ $('#btnSalvar').addEventListener('click', function () {
   a.click();
   a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-  aviso('Arquivo salvo na pasta Downloads. Use "Abrir arquivo" para continuar depois.');
+  aviso('Arquivo salvo na pasta Downloads.');
 });
 
 $('#btnAbrir').addEventListener('click', function () { $('#arquivo').click(); });
@@ -368,5 +437,6 @@ $('#btnPdf').addEventListener('click', function () {
 });
 
 /* ---------- início ---------- */
+montarMenuTipos();
 sincronizarForm();
-if (rascunho && rascunho.estado) aviso('Rascunho anterior recuperado e atualizado.');
+if (rascunho && rascunho.estado) aviso('Rascunho anterior recuperado.');

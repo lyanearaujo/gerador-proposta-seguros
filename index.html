@@ -31,10 +31,7 @@
     <details open>
       <summary>1. Tipo de proposta</summary>
       <div class="conteudo">
-        <div class="opcoes">
-          <label class="opcao"><input type="radio" name="tipo" value="rcp"> <span>RC Profissional (E&amp;O)</span></label>
-          <label class="opcao"><input type="radio" name="tipo" value="patrimonial"> <span>Patrimonial Empresarial</span></label>
-        </div>
+        <div class="opcoes" id="lista-tipos"></div>
         <label class="check"><input type="checkbox" id="capa"> Incluir capa e página final</label>
       </div>
     </details>
@@ -42,7 +39,7 @@
     <details open>
       <summary>2. Dados do cliente</summary>
       <div class="conteudo">
-        <label>Nome da empresa <input type="text" data-path="cliente" placeholder="Ex.: Costa e Costa Assessoria Contábil LTDA"></label>
+        <label>Nome do cliente / empresa <input type="text" data-path="cliente" placeholder="Ex.: Costa e Costa Assessoria Contábil LTDA"></label>
         <label id="label-doc">CPF/CNPJ <input type="text" data-path="cnpj" data-mask="cnpj" inputmode="numeric" placeholder="000.000.000-00 ou 00.000.000/0000-00"></label>
         <label id="campo-endereco">Endereço (opcional) <input type="text" data-path="endereco" placeholder="Rua, número, bairro, cidade/UF - CEP"></label>
       </div>
@@ -66,8 +63,16 @@
       </div>
     </details>
 
+    <details id="secao-coberturas" hidden>
+      <summary>5. Coberturas contratadas (Descritivo)</summary>
+      <div class="conteudo">
+        <p class="ajuda">Selecione as coberturas incluídas nesta proposta. Elas geram uma página dedicada com a descrição de cada garantia.</p>
+        <div id="lista-coberturas"></div>
+      </div>
+    </details>
+
     <details>
-      <summary id="tit-analise">5. Análise técnica</summary>
+      <summary class="sec-numerada" data-titulo="Análise técnica">Análise técnica</summary>
       <div class="conteudo">
         <p class="ajuda" id="dica-analise"></p>
         <div id="lista-analise" class="lista"></div>
@@ -75,7 +80,7 @@
     </details>
 
     <details>
-      <summary>6. Comparativo de valores e coberturas</summary>
+      <summary class="sec-numerada" data-titulo="Comparativo de valores e coberturas">Comparativo de valores e coberturas</summary>
       <div class="conteudo">
         <label>Título da seção <input type="text" data-path="c.tituloComp"></label>
         <label>Texto antes da tabela <textarea rows="3" data-path="c.textoComp"></textarea></label>
@@ -91,7 +96,7 @@
     </details>
 
     <details>
-      <summary>7. Recomendação técnica</summary>
+      <summary class="sec-numerada" data-titulo="Recomendação técnica">Recomendação técnica</summary>
       <div class="conteudo">
         <label>Texto da recomendação <textarea rows="4" data-path="c.recomendacao"></textarea></label>
         <p class="ajuda">Para deixar uma palavra em negrito, coloque entre dois asteriscos: **Allianz**</p>
@@ -99,7 +104,7 @@
     </details>
 
     <details>
-      <summary>8. Gerenciamento de riscos</summary>
+      <summary class="sec-numerada" data-titulo="Gerenciamento de riscos">Gerenciamento de riscos</summary>
       <div class="conteudo">
         <label>Título da seção <input type="text" data-path="c.tituloRiscos"></label>
         <label>Texto de abertura <textarea rows="3" data-path="c.introRiscos"></textarea></label>
@@ -108,7 +113,7 @@
     </details>
 
     <details>
-      <summary>9. Corretora e rodapé (configuração fixa)</summary>
+      <summary class="sec-numerada" data-titulo="Corretora e rodapé (configuração fixa)">Corretora e rodapé (configuração fixa)</summary>
       <div class="conteudo">
         <p class="ajuda">Estes dados ficam salvos neste computador e valem para todas as propostas.</p>
         <label>Nome do corretor(a) <input type="text" data-path="corr.nome"></label>
@@ -134,7 +139,13 @@
 
 <div id="aviso" class="toast" hidden></div>
 
-<script src="gerador.js"></script>
-<script src="app.js"></script>
+<!-- 1. Registro dos produtos (adicione novos arquivos aqui no futuro) -->
+<script>window.PRODUTOS = {};</script>
+<script src="produtos/rcp.js"></script>
+<script src="produtos/patrimonial.js"></script>
+
+<!-- 2. Núcleo compartilhado -->
+<script src="core/motor.js"></script>
+<script src="core/tela.js"></script>
 </body>
 </html>

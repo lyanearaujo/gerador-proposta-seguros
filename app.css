@@ -120,3 +120,18 @@ input[type=text]:focus, textarea:focus{ outline:2px solid #9db4ef; border-color:
   .layout{ grid-template-columns:1fr; }
   #previewWrap{ position:static; height:auto; max-height:80vh; }
 }
+
+/* ---- grupos de coberturas (checkboxes) ---- */
+#lista-coberturas{ display:flex; flex-direction:column; gap:14px; }
+.grupo-check{
+  border:1px solid var(--borda); border-radius:8px; padding:10px 12px; background:#fafbfd;
+  display:flex; flex-direction:column; gap:7px;
+}
+.grupo-titulo{
+  font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+  color:var(--azul); border-bottom:1px solid var(--borda); padding-bottom:4px; margin-bottom:2px;
+}
+.cob-item{ cursor:pointer; align-items:flex-start; line-height:1.35; }
+.cob-item input{ margin-top:2px; }
+.campo-cob-custom{ margin-top:4px; font-size:13px; }
+.campo-cob-custom[hidden]{ display:none; }

@@ -1,11 +1,6 @@
 'use strict';
 /* =====================================================================
-   gerador.js  -  o "cérebro" da proposta (não mexe na tela do formulário)
-
-   1) CORRETORA_PADRAO ........ dados fixos da corretora
-   2) conteudoPadrao(tipo) .... textos prontos de cada tipo de seguro
-   3) montarProposta(e, c) .... gera o HTML da proposta (mesma estrutura
-                                do seu proposta.html + proposta.css)
+   core/motor.js  -  Núcleo compartilhado entre todos os seguros
    ===================================================================== */
 
 const CORRETORA_PADRAO = {
@@ -28,146 +23,37 @@ const CORRETORA_PADRAO = {
 
 const LEI_NOTA = 'Nossa oferta atende integralmente às exigências da Lei Federal no 15.040/2024, em vigor desde 11/12/2025, garantindo total conformidade legal para as operações da sua empresa.';
 
+function obterProduto(tipo) {
+  return window.PRODUTOS[tipo] || window.PRODUTOS.patrimonial || Object.values(window.PRODUTOS)[0];
+}
+
 function conteudoPadrao(tipo) {
-  if (tipo === 'rcp') {
-    return {
-      tipoTexto: 'Seguro de Responsabilidade Civil Profissional (E&O)',
-      intro: 'O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades da sua assessoria contábil, com o objetivo de oferecer a melhor relação entre proteção e investimento para a sua atuação.',
-      destaques: [
-        { t: 'Foco na Proteção Profissional:', x: 'Mapeamento prioritário para resguardar o patrimônio da empresa contra eventuais reclamações de terceiros decorrentes de falhas na prestação de serviços contábeis.' },
-        { t: 'Garantia de Custos de Defesa:', x: 'Cobertura dedicada para o pagamento de honorários advocatícios e custas judiciais, garantindo tranquilidade financeira para sua defesa em caso de processos ou questionamentos.' }
-      ],
-      cards: [
-        { r: 'Enquadramento', v: '', d: '' },
-        { r: 'Vigência e validade', v: '', d: '' }
-      ],
-      analise: [
-        { t: 'Base de Contratação:', x: 'Reclamação com notificação, com prazo complementar de 36 meses.' },
-        { t: 'Franquia Padrão:', x: '8,00% dos prejuízos com mínimo de R$ 3.000,00 para o reclamante.' },
-        { t: 'Principais Subcoberturas (100% do limite):', x: 'Extravio de Documentos, Danos Morais, Calúnia, Injúria e Difamação, Quebra de Sigilo, Lucros Cessantes e Gestão de Crise.' },
-        { t: 'Atos Desonestos (Exclusivo PJ):', x: 'Cobertura de 10% do limite contratado.' }
-      ],
-      tituloComp: 'Análise das Opções de Contratação',
-      textoComp: 'Abaixo, apresentamos o comparativo estruturado com três cenários de Limite Máximo de Garantia (LMG) na seguradora [SEGURADORA], permitindo que escolha o nível de proteção ideal para o porte do seu escritório:',
-      primeiraColuna: 'Detalhes da Cobertura',
-      colunas: ['Opção 1', 'Opção 2', 'Opção 3'],
-      linhas: [
-        { rot: 'Limite Máximo de Garantia (LMG)', vals: ['', '', ''], neg: false },
-        { rot: 'RC Profissional (Acordos/Indenizações)', vals: ['', '', ''], neg: false },
-        { rot: 'LMI Gastos com Defesa', vals: ['', '', ''], neg: false },
-        { rot: 'Condições de Pagamento', vals: ['', '', ''], neg: false },
-        { rot: 'Valor por parcela', vals: ['', '', ''], neg: true }
-      ],
-      destaqueCol: 0,
-      notaTabela: '',
-      recomendacao: 'O limite de garantia contratado é de acordo com a relevância do seu risco da carteira de clientes.',
-      tituloRiscos: 'Gerenciamento de Riscos Contábeis',
-      introRiscos: 'Para garantir a plena eficácia das coberturas securitárias e a segurança contínua da sua operação, recomendamos as seguintes diretrizes preventivas ao longo da vigência:',
-      riscos: [
-        { t: 'Controle de Prazos (Obrigações Acessórias):', x: 'Manter sistemas automatizados e atualizados para o controle rigoroso de envio de guias e declarações aos órgãos reguladores, evitando multas por atraso que possam ser repassadas ou cobradas do seu escritório.' },
-        { t: 'Contrato de prestação de serviços com a base de clientes', x: '' },
-        { t: 'Treinamento e LGPD:', x: 'Reforçar as políticas de conformidade e tratamento de dados pessoais com toda a equipe, mitigando os riscos associados à quebra de sigilo profissional e vazamento de informações.' }
-      ],
-      notaLegal: LEI_NOTA
-    };
-  }
-  return {
-    tipoTexto: 'Seguro Patrimonial Empresarial',
-    intro: 'O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades apresentadas, com o objetivo de oferecer a melhor relação entre proteção e investimento para a atividade da sua empresa.',
-    destaques: [
-      { t: 'Foco Estrutural e Responsabilidade Civil:', x: 'Mapeamento prioritário contra danos à infraestrutura física do imóvel e proteção financeira dedicada para eventuais danos materiais e corporais causados a terceiros durante a operação comercial.' },
-      { t: 'Garantia de Valor de Novo:', x: 'Aplicação explícita de Cláusula de Valor de Novo nas coberturas aplicáveis, garantindo que, em situações de sinistro, a indenização seja calculada pelo custo de reposição atual dos bens, sem dedução ou aplicação de depreciação pelo tempo de uso.' }
-    ],
-    cards: [
-      { r: 'Enquadramento do risco', v: '', d: '' },
-      { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
-      { r: 'Valor em risco (prédio e conteúdo)', v: '', d: '' }
-    ],
-    analise: [{ t: '', x: '' }],
-    tituloComp: 'Análise das Seguradoras',
-    textoComp: 'Abaixo, apresentamos o comparativo de mercado estruturado de forma personalizada:',
-    primeiraColuna: 'Condições de Pagamento',
-    colunas: ['Seguradora 1', 'Seguradora 2'],
-    linhas: [
-      { rot: 'Valor Total', vals: ['', ''], neg: true },
-      { rot: '4 parcelas (Boleto)', vals: ['', ''], neg: false },
-      { rot: 'Outro parcelamento', vals: ['', ''], neg: false }
-    ],
-    destaqueCol: 0,
-    notaTabela: 'As propostas detalhadas de cada Seguradora se encontram no final desse documento.',
-    recomendacao: 'Para este perfil de risco específico, a seguradora **[SEGURADORA]** apresenta o melhor equilíbrio técnico e comercial entre investimento, coberturas e limites de garantias.',
-    tituloRiscos: 'Gerenciamento de Riscos',
-    introRiscos: 'Para garantir a plena eficácia das coberturas securitárias e a segurança contínua da operação, recomendamos as seguintes diretrizes preventivas:',
-    riscos: [
-      { t: 'Instalações Elétricas:', x: 'Adequar toda a fiação elétrica aparente, protegendo-a por meio de eletrodutos e/ou eletrocalhas rígidas.' },
-      { t: 'Extintores de Incêndio:', x: 'Realizar a recarga dos extintores quando necessária (mantendo conformidade com as normas da ABNT) e garantir que permaneçam desobstruídos e com livre acesso. É indispensável o envio da Nota Fiscal válida da manutenção.' },
-      { t: 'Armazenamento de Materiais:', x: 'Organizar e manter mercadorias e matérias-primas com distância mínima de 1 (um) metro em relação a luminárias, cobertura (telhado), estruturas metálicas, instalações elétricas e fontes de calor.' },
-      { t: 'Corredores de Circulação:', x: 'Manter os corredores livres e organizados, preservando largura mínima de 1 (um) metro para facilitar a circulação e o acesso aos equipamentos de combate a incêndio.' }
-    ],
-    notaLegal: LEI_NOTA
-  };
+  return obterProduto(tipo).conteudoPadrao(LEI_NOTA);
 }
 
 function estadoPadrao(tipo) {
   tipo = tipo || 'patrimonial';
+  const conteudos = {};
+  Object.keys(window.PRODUTOS).forEach(function (k) {
+    conteudos[k] = window.PRODUTOS[k].conteudoPadrao(LEI_NOTA);
+  });
   return {
-    versao: 1,
+    versao: 3,
     tipo: tipo,
-    capa: tipo === 'patrimonial',
+    capa: true,
     cliente: '',
     cnpj: '',
     endereco: '',
-    conteudo: { rcp: conteudoPadrao('rcp'), patrimonial: conteudoPadrao('patrimonial') }
+    conteudo: conteudos
   };
 }
 
 function aplicarExemplo(e) {
-  const d = e.conteudo[e.tipo];
-  if (e.tipo === 'rcp') {
-    e.cliente = 'Costa e Costa Assessoria Contábil LTDA';
-    e.cnpj = '13.317.445/0001-41';
-    e.endereco = '';
-    d.cards = [
-      { r: 'Enquadramento', v: 'Contadores', d: 'Faturamento: R$ 1M a R$ 1.500M' },
-      { r: 'Vigência e validade', v: '04/09/2026 a 04/09/2027', d: 'Retroatividade: 04/09/23' }
-    ];
-    d.textoComp = d.textoComp.replace('[SEGURADORA]', 'Allianz');
-    d.linhas = [
-      { rot: 'Limite Máximo de Garantia (LMG)', vals: ['R$ 1.000.000,00', 'R$ 500.000,00', 'R$ 300.000,00'], neg: false },
-      { rot: 'RC Profissional (Acordos/Indenizações)', vals: ['R$ 800.000,00', 'R$ 400.000,00', 'R$ 210.000,00'], neg: false },
-      { rot: 'LMI Gastos com Defesa', vals: ['R$ 200.000,00', 'R$ 100.000,00', 'R$ 90.000,00'], neg: false },
-      { rot: 'Condições de Pagamento', vals: ['7x no Boleto Bancário', '', ''], neg: false },
-      { rot: 'Valor por parcela', vals: ['R$ 1.817,75', 'R$ 954,30', 'R$ 758,74'], neg: true }
-    ];
-  } else {
-    e.cliente = 'Comércio Varejista de Alimentos Verde Vale Campina LTDA';
-    e.cnpj = '26.073.725/0001-01';
-    e.endereco = 'Av. Prof. Almeida Barreto, 790, São José, Campina Grande/PB - CEP: 58400-328';
-    d.intro = d.intro.replace('a atividade da sua empresa', 'a atividade de comercialização e armazenamento');
-    d.cards = [
-      { r: 'Enquadramento do risco', v: 'Lojas/Depósitos, Supermercados', d: '' },
-      { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
-      { r: 'Valor em risco (prédio e conteúdo)', v: 'R$ 9.047.677,00', d: '' }
-    ];
-    d.analise = [
-      { t: '', x: 'Não houve sinistros nos últimos 12 meses;' },
-      { t: '', x: 'Possui sistemas de segurança (extintores e circuito de câmeras);' },
-      { t: '', x: 'Não possui outra apólice de seguro vigente para o mesmo risco.' }
-    ];
-    d.colunas = ['Allianz', 'Sura'];
-    d.linhas = [
-      { rot: 'Valor Total', vals: ['R$ 19.765,84', 'R$ 44.835,32'], neg: true },
-      { rot: '4 parcelas (Boleto)', vals: ['R$ 4.941,46', 'R$ 11.206,83'], neg: false },
-      { rot: 'Outro parcelamento', vals: ['R$ 2.823,70 | (7x - Débito em conta)', 'R$ 7.427,57 | (6x - Boleto)'], neg: false }
-    ];
-    d.recomendacao = d.recomendacao.replace('[SEGURADORA]', 'Allianz');
-  }
-  d.destaqueCol = 0;
+  const prod = obterProduto(e.tipo);
+  if (prod.aplicarExemplo) prod.aplicarExemplo(e, e.conteudo[e.tipo]);
 }
 
-/* ---------------------------------------------------------------------
-   Utilidades de texto
-   --------------------------------------------------------------------- */
+/* ---------- utilidades de texto e validação ---------- */
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -190,17 +76,17 @@ function cpfCnpjValido(s) {
     let soma = 0, resto;
     for (let i = 1; i <= 9; i++) soma += parseInt(n.substring(i - 1, i)) * (11 - i);
     resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto === 10 || resto === 11) resto = 0;
     if (resto !== parseInt(n.substring(9, 10))) return false;
     soma = 0;
     for (let i = 1; i <= 10; i++) soma += parseInt(n.substring(i - 1, i)) * (12 - i);
     resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto === 10 || resto === 11) resto = 0;
     if (resto !== parseInt(n.substring(10, 11))) return false;
     return true;
   } else if (n.length === 14) {
     if (/^(\d)\1+$/.test(n)) return false;
-    const dv = function(base) {
+    const dv = function (base) {
       let soma = 0, peso = base.length - 7;
       for (let i = 0; i < base.length; i++) {
         soma += base[i] * peso--;
@@ -251,12 +137,9 @@ function nomeArquivo(e, data) {
   const cliente = String(e.cliente || 'Cliente')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'Cliente';
-  return 'Proposta_' + (e.tipo === 'rcp' ? 'RCP' : 'Patrimonial') + '_' + cliente + '_' + dia;
+  return 'Proposta_' + e.tipo.toUpperCase() + '_' + cliente + '_' + dia;
 }
 
-/* ---------------------------------------------------------------------
-   Lista de pendências antes de gerar o PDF
-   --------------------------------------------------------------------- */
 function coletarTextos(o, acc) {
   if (typeof o === 'string') acc.push(o);
   else if (Array.isArray(o)) o.forEach(function (x) { coletarTextos(x, acc); });
@@ -265,12 +148,15 @@ function coletarTextos(o, acc) {
 }
 
 function validarProposta(e) {
+  const prod = obterProduto(e.tipo);
   const d = e.conteudo[e.tipo];
   const p = [];
   if (!e.cliente.trim()) p.push('Falta o nome do cliente.');
-  if (!e.cnpj.trim()) p.push(e.tipo === 'rcp' ? 'Falta o CPF/CNPJ.' : 'Falta o CNPJ.');
-  else if (!cpfCnpjValido(e.cnpj)) p.push(e.tipo === 'rcp' ? 'O CPF/CNPJ digitado parece inválido (confira os números).' : 'O CNPJ digitado parece inválido (confira os números).');
-  
+  if (!e.cnpj.trim()) p.push(prod.aceitaCpf ? 'Falta o CPF/CNPJ.' : 'Falta o CNPJ.');
+  else if (!cpfCnpjValido(e.cnpj)) p.push(prod.aceitaCpf ? 'O CPF/CNPJ digitado parece inválido.' : 'O CNPJ digitado parece inválido.');
+
+  if (prod.validarExtra) prod.validarExtra(d, p);
+
   d.cards.forEach(function (c) {
     if ((c.r || c.d) && !String(c.v).trim()) p.push('O quadro "' + (c.r || 'sem título') + '" está sem valor.');
   });
@@ -290,10 +176,9 @@ function validarProposta(e) {
   return p;
 }
 
-/* ---------------------------------------------------------------------
-   MONTAGEM DO HTML DA PROPOSTA  (espelha o seu proposta.html)
-   --------------------------------------------------------------------- */
+/* ---------- montagem do HTML ---------- */
 function montarProposta(e, c) {
+  const prod = obterProduto(e.tipo);
   const d = e.conteudo[e.tipo];
   const rcp = e.tipo === 'rcp';
   const nome = e.cliente.trim() || 'NOME DO CLIENTE';
@@ -303,9 +188,8 @@ function montarProposta(e, c) {
 
   const numDoc = e.cnpj.replace(/\D/g, '');
   const rotuloDoc = (numDoc.length <= 11 && numDoc.length > 0) ? 'CPF: ' : 'CNPJ: ';
-  const tituloDoc = (rcp && numDoc.length <= 11) ? 'Dados do profissional' : 'Dados da empresa';
+  const tituloDoc = (prod.aceitaCpf && numDoc.length <= 11) ? 'Dados do profissional' : 'Dados da empresa';
 
-  /* ---- Capa ---- */
   const capa = !e.capa ? '' : `
 <section class="pagina capa">
   <div class="logo-topo"><div class="logo branco">${logo}</div></div>
@@ -321,21 +205,20 @@ function montarProposta(e, c) {
   </div>
 </section>`;
 
-  /* ---- Página: dados da proposta ---- */
   const destaques = d.destaques.filter(function (x) { return x.t || x.x; });
   const cards = [{
     r: tituloDoc,
     v: rotuloDoc + (e.cnpj.trim() || '—'),
     d: e.endereco.trim()
   }].concat(d.cards.filter(function (x) { return x.r || x.v || x.d; }));
-  
+
   const cardsHtml = cards.map(function (x) {
     return '<div class="card"><div class="rotulo">' + esc(x.r) + '</div>' +
       '<div class="valor">' + esc(x.v || '—') + '</div>' +
       (x.d ? '<div class="detalhe">' + esc(x.d) + '</div>' : '') + '</div>';
   }).join('');
-  const analise = d.analise.filter(function (x) { return x.t || x.x; });
 
+  const analise = d.analise.filter(function (x) { return x.t || x.x; });
   let blocoAnalise = '';
   if (analise.length) {
     if (rcp) {
@@ -379,7 +262,11 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* ---- Página: comparativo ---- */
+  /* Página extra específica do produto (ex.: Descritivo de Coberturas do Patrimonial) */
+  const paginaExtra = prod.renderizarPaginaExtra
+    ? prod.renderizarPaginaExtra(d, rodape, { esc: esc, rich: rich })
+    : '';
+
   const thead = '<tr><th>' + esc(d.primeiraColuna) + '</th>' +
     d.colunas.map(function (n) { return '<th>' + esc(n) + '</th>'; }).join('') + '</tr>';
   const tbody = d.linhas.map(function (l) {
@@ -413,7 +300,6 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* ---- Página: riscos + diferenciais ---- */
   const riscos = d.riscos.filter(function (x) { return x.t || x.x; });
   const difs = c.diferenciais.filter(function (x) { return x.x && x.x.trim(); });
 
@@ -454,7 +340,6 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* ---- Página final ---- */
   const final = !e.capa ? '' : `
 <section class="pagina final" id="pagina-final">
   <div class="topo">
@@ -473,10 +358,5 @@ function montarProposta(e, c) {
   </div>
 </section>`;
 
-  return capa + pagina2 + pagina3 + pagina4 + final;
-}
-
-if (typeof module !== 'undefined') {
-  module.exports = { CORRETORA_PADRAO, conteudoPadrao, estadoPadrao, aplicarExemplo, montarProposta,
-    cpfCnpjValido, mascaraCpfCnpj, dinheiroSeNumerico, nomeArquivo, validarProposta };
+  return capa + pagina2 + paginaExtra + pagina3 + pagina4 + final;
 }

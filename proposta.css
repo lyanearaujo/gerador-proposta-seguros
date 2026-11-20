@@ -512,3 +512,22 @@ table.comparativo{
     break-inside:avoid;
     page-break-inside:avoid;
 }
+
+/* --------- PÁGINA DE DESCRITIVO DE COBERTURAS --------- */
+.grupo-cob{
+    margin-bottom:14px;
+    break-inside:avoid;
+    page-break-inside:avoid;
+}
+.subsecao-cob{
+    font-size:11.5pt;
+    color:var(--azul-escuro);
+    border-left:4px solid var(--dourado);
+    padding-left:8px;
+    margin-bottom:7px;
+}
+.cob-lista li{
+    font-size:9.5pt;
+    line-height:1.4;
+    margin-bottom:5px;
+}
