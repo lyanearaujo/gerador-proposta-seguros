@@ -3,7 +3,7 @@
    core/tela.js  -  Controle da interface, prévia, rascunho e PDF
    ===================================================================== */
 
-const LS_RASCUNHO = 'neu_proposta_rascunho_v3';
+const LS_RASCUNHO = 'neu_proposta_rascunho_v4';
 const LS_CORRETORA = 'neu_corretora_v1';
 
 const $ = function (s, r) { return (r || document).querySelector(s); };
@@ -46,14 +46,20 @@ function normalizarEstado(obj) {
     if (padrao.coberturasCustom && typeof e.conteudo[k].coberturasCustom !== 'object') {
       e.conteudo[k].coberturasCustom = Object.assign({}, padrao.coberturasCustom);
     }
+    if (padrao.valoresCoberturas && typeof e.conteudo[k].valoresCoberturas !== 'object') {
+      e.conteudo[k].valoresCoberturas = {};
+    }
+    if (padrao.resumoValores) {
+      e.conteudo[k].resumoValores = Object.assign({ liquido: [], total: [], pagamento: [] }, salvo.resumoValores || {});
+    }
   });
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  e.versao = 3;
+  e.versao = 4;
   return e;
 }
 
-let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v2') || lerLS('neu_proposta_rascunho_v1');
+let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v3') || lerLS('neu_proposta_rascunho_v2');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
 
@@ -194,6 +200,8 @@ function editorCoberturas(prod) {
         if (chk.checked && idx < 0) d.coberturasSelecionadas.push(it.id);
         if (!chk.checked && idx >= 0) d.coberturasSelecionadas.splice(idx, 1);
         if (campoCustom) campoCustom.hidden = !chk.checked;
+        /* Atualiza a tabela de valores automaticamente quando marca/desmarca cobertura */
+        if (prod.tabelaMatrizCoberturas) editorTabelaMatriz(prod);
         mudou();
       });
 
@@ -234,12 +242,146 @@ function editorLista(cont, arr, campos, novo, rotuloAdd) {
   cont.append(add);
 }
 
-/* ---------- editor da tabela comparativa ---------- */
-function editorTabela() {
+/* ---------- editor da tabela matricial (Empresarial: Limite + Franquia) ---------- */
+function editorTabelaMatriz(prod) {
   const d = conteudo();
   const cont = $('#editor-tabela');
   cont.innerHTML = '';
-  const rebuild = function () { editorTabela(); mudou(); };
+  const rebuild = function () { editorTabelaMatriz(prod); mudou(); };
+
+  if (!d.valoresCoberturas) d.valoresCoberturas = {};
+  if (!d.resumoValores) d.resumoValores = { liquido: [], total: [], pagamento: [] };
+
+  const ativas = prod.obterCoberturasAtivas(d);
+  const tab = h('table', { class: 'tab-ed tab-matriz-ed' });
+
+  /* Linha 1 do cabeçalho: Seguradoras */
+  const cab1 = h('tr');
+  const nenhuma = h('input', { type: 'radio', name: 'destaque-col' });
+  nenhuma.checked = d.destaqueCol < 0 || d.destaqueCol >= d.colunas.length;
+  nenhuma.addEventListener('change', function () { d.destaqueCol = -1; mudou(); });
+  cab1.append(h('th', { rowspan: 2 }, [h('label', { class: 'recom' }, [nenhuma, ' Sem destaque'])]));
+
+  d.colunas.forEach(function (nome, i) {
+    const inp = h('input', { placeholder: 'Nome da seguradora' });
+    inp.value = nome;
+    inp.addEventListener('input', function () { d.colunas[i] = inp.value; mudou(); });
+
+    const rad = h('input', { type: 'radio', name: 'destaque-col' });
+    rad.checked = d.destaqueCol === i;
+    rad.addEventListener('change', function () { d.destaqueCol = i; mudou(); });
+
+    const rm = h('button', { type: 'button', class: 'x pequeno', title: 'Remover seguradora', text: '×' });
+    rm.addEventListener('click', function () {
+      if (d.colunas.length <= 1) { aviso('A tabela precisa de pelo menos 1 seguradora.'); return; }
+      d.colunas.splice(i, 1);
+      Object.keys(d.valoresCoberturas).forEach(function (cid) {
+        if (Array.isArray(d.valoresCoberturas[cid])) d.valoresCoberturas[cid].splice(i, 1);
+      });
+      ['liquido', 'total', 'pagamento'].forEach(function (k) {
+        if (Array.isArray(d.resumoValores[k])) d.resumoValores[k].splice(i, 1);
+      });
+      if (d.destaqueCol === i) d.destaqueCol = -1;
+      else if (d.destaqueCol > i) d.destaqueCol -= 1;
+      rebuild();
+    });
+
+    cab1.append(h('th', { colspan: 2 }, [inp, h('label', { class: 'recom' }, [rad, ' Recomendada']), rm]));
+  });
+
+  const addCol = h('button', { type: 'button', class: 'add', text: '+ Seguradora' });
+  addCol.addEventListener('click', function () {
+    d.colunas.push('Seguradora ' + (d.colunas.length + 1));
+    rebuild();
+  });
+  cab1.append(h('th', { rowspan: 2 }, [addCol]));
+  tab.append(cab1);
+
+  /* Linha 2 do cabeçalho: Limite de garantia | Franquia */
+  const cab2 = h('tr');
+  d.colunas.forEach(function () {
+    cab2.append(h('th', { class: 'sub-th-ed', text: 'Limite de garantia' }));
+    cab2.append(h('th', { class: 'sub-th-ed', text: 'Franquia' }));
+  });
+  tab.append(cab2);
+
+  /* Linhas das coberturas marcadas */
+  if (!ativas.length) {
+    const trVazio = h('tr');
+    trVazio.append(h('td', { colspan: 1 + (d.colunas.length * 2), class: 'aviso-tab-vazia', text: 'Marque as coberturas na seção 5 acima para preencher os limites e franquias aqui.' }));
+    tab.append(trVazio);
+  } else {
+    ativas.forEach(function (cob) {
+      if (!Array.isArray(d.valoresCoberturas[cob.id])) d.valoresCoberturas[cob.id] = [];
+      const arr = d.valoresCoberturas[cob.id];
+      const tr = h('tr');
+      tr.append(h('td', { class: 'nome-cob-ed', text: cob.nome }));
+
+      d.colunas.forEach(function (_, ci) {
+        if (!arr[ci]) arr[ci] = { lmg: '', franq: '' };
+
+        const inpLmg = h('input', { placeholder: 'Limite (R$)' });
+        inpLmg.value = arr[ci].lmg || '';
+        inpLmg.addEventListener('input', function () { arr[ci].lmg = inpLmg.value; mudou(); });
+        inpLmg.addEventListener('blur', function () {
+          const f = dinheiroSeNumerico(inpLmg.value);
+          if (f !== inpLmg.value) { inpLmg.value = f; arr[ci].lmg = f; mudou(); }
+        });
+
+        const inpFranq = h('input', { placeholder: 'Franquia' });
+        inpFranq.value = arr[ci].franq || '';
+        inpFranq.addEventListener('input', function () { arr[ci].franq = inpFranq.value; mudou(); });
+        inpFranq.addEventListener('blur', function () {
+          const f = dinheiroSeNumerico(inpFranq.value);
+          if (f !== inpFranq.value) { inpFranq.value = f; arr[ci].franq = f; mudou(); }
+        });
+
+        tr.append(h('td', {}, [inpLmg]));
+        tr.append(h('td', {}, [inpFranq]));
+      });
+
+      tab.append(tr);
+    });
+  }
+
+  /* Linhas fixas finais: Valor Líquido, Valor Total e Forma de Pagamento */
+  const linhasFinais = [
+    { chave: 'liquido', rotulo: 'Valor Líquido', ph: 'Ex.: 18407,38', formatarMoeda: true },
+    { chave: 'total', rotulo: 'Valor Total (Bruto)', ph: 'Ex.: 19765,84', formatarMoeda: true, destaque: true },
+    { chave: 'pagamento', rotulo: 'Forma de Pagamento', ph: 'Ex.: 7x sem juros - Débito em conta', formatarMoeda: false }
+  ];
+
+  linhasFinais.forEach(function (lf) {
+    if (!Array.isArray(d.resumoValores[lf.chave])) d.resumoValores[lf.chave] = [];
+    const arr = d.resumoValores[lf.chave];
+    const tr = h('tr', { class: lf.destaque ? 'tr-total-ed' : 'tr-resumo-ed' });
+    tr.append(h('td', { class: 'nome-cob-ed', text: lf.rotulo }));
+
+    d.colunas.forEach(function (_, ci) {
+      const inp = h('input', { placeholder: lf.ph });
+      inp.value = arr[ci] || '';
+      inp.addEventListener('input', function () { arr[ci] = inp.value; mudou(); });
+      if (lf.formatarMoeda) {
+        inp.addEventListener('blur', function () {
+          const f = dinheiroSeNumerico(inp.value);
+          if (f !== inp.value) { inp.value = f; arr[ci] = f; mudou(); }
+        });
+      }
+      tr.append(h('td', { colspan: 2 }, [inp]));
+    });
+
+    tab.append(tr);
+  });
+
+  cont.append(h('div', { class: 'rolagem' }, [tab]));
+}
+
+/* ---------- editor da tabela simples (RCP e outros) ---------- */
+function editorTabelaSimples() {
+  const d = conteudo();
+  const cont = $('#editor-tabela');
+  cont.innerHTML = '';
+  const rebuild = function () { editorTabelaSimples(); mudou(); };
 
   const tab = h('table', { class: 'tab-ed' });
   const cab = h('tr');
@@ -336,7 +478,6 @@ function sincronizarForm() {
 
   editorCoberturas(prod);
 
-  /* Renumera os passos automaticamente conforme a seção 5 exista ou não */
   let num = prod.gruposCoberturas ? 6 : 5;
   $$('.sec-numerada').forEach(function (el) {
     el.textContent = num + '. ' + el.dataset.titulo;
@@ -355,7 +496,8 @@ function sincronizarForm() {
     [{ k: 't', rot: 'Título em negrito (opcional)', ph: '' }, { k: 'x', rot: 'Texto', longo: true }],
     function () { return { t: '', x: '' }; }, 'Adicionar ponto da análise');
 
-  editorTabela();
+  if (prod.tabelaMatrizCoberturas) editorTabelaMatriz(prod);
+  else editorTabelaSimples();
 
   editorLista($('#lista-riscos'), d.riscos,
     [{ k: 't', rot: 'Título em negrito', ph: 'Ex.: Extintores de Incêndio:' }, { k: 'x', rot: 'Texto', longo: true }],

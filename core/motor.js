@@ -38,7 +38,7 @@ function estadoPadrao(tipo) {
     conteudos[k] = window.PRODUTOS[k].conteudoPadrao(LEI_NOTA);
   });
   return {
-    versao: 3,
+    versao: 4,
     tipo: tipo,
     capa: true,
     cliente: '',
@@ -163,12 +163,16 @@ function validarProposta(e) {
   d.colunas.forEach(function (c, i) {
     if (!String(c).trim()) p.push('A coluna ' + (i + 1) + ' da tabela está sem nome.');
   });
-  d.linhas.forEach(function (l) {
-    const preenchidas = d.colunas.filter(function (_, i) { return String(l.vals[i] || '').trim(); }).length;
-    const soPrimeira = preenchidas === 1 && String(l.vals[0] || '').trim();
-    if (preenchidas === 0) p.push('Na tabela, a linha "' + l.rot + '" está sem valores.');
-    else if (preenchidas < d.colunas.length && !soPrimeira) p.push('Na tabela, a linha "' + l.rot + '" tem células vazias.');
-  });
+
+  if (!prod.tabelaMatrizCoberturas && Array.isArray(d.linhas)) {
+    d.linhas.forEach(function (l) {
+      const preenchidas = d.colunas.filter(function (_, i) { return String(l.vals[i] || '').trim(); }).length;
+      const soPrimeira = preenchidas === 1 && String(l.vals[0] || '').trim();
+      if (preenchidas === 0) p.push('Na tabela, a linha "' + l.rot + '" está sem valores.');
+      else if (preenchidas < d.colunas.length && !soPrimeira) p.push('Na tabela, a linha "' + l.rot + '" tem células vazias.');
+    });
+  }
+
   const textos = coletarTextos([d, e.cliente, e.endereco], []);
   if (textos.some(function (t) { return /\[[^\]]{1,60}\]/.test(t); })) {
     p.push('Ainda há trechos entre [COLCHETES] para preencher.');
@@ -262,34 +266,36 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
-  /* Página extra específica do produto (ex.: Descritivo de Coberturas do Patrimonial) */
   const paginaExtra = prod.renderizarPaginaExtra
     ? prod.renderizarPaginaExtra(d, rodape, { esc: esc, rich: rich })
     : '';
 
-  const thead = '<tr><th>' + esc(d.primeiraColuna) + '</th>' +
-    d.colunas.map(function (n) { return '<th>' + esc(n) + '</th>'; }).join('') + '</tr>';
-  const tbody = d.linhas.map(function (l) {
-    const vals = d.colunas.map(function (_, i) { return String(l.vals[i] || ''); });
-    const cls = l.neg ? ' class="total"' : '';
-    const soPrimeira = d.colunas.length > 1 && vals[0].trim() && vals.slice(1).every(function (v) { return !v.trim(); });
-    if (soPrimeira) {
-      return '<tr' + cls + '><td>' + esc(l.rot) + '</td><td colspan="' + d.colunas.length + '">' + cel(vals[0]) + '</td></tr>';
-    }
-    return '<tr' + cls + '><td>' + esc(l.rot) + '</td>' + vals.map(function (v, i) {
-      return '<td' + (i === d.destaqueCol ? ' class="destaque"' : '') + '>' + cel(v) + '</td>';
-    }).join('') + '</tr>';
-  }).join('');
+  let tabelaHtml = '';
+  if (prod.renderizarTabelaComparativa) {
+    tabelaHtml = prod.renderizarTabelaComparativa(d, { esc: esc, rich: rich, cel: cel });
+  } else {
+    const thead = '<tr><th>' + esc(d.primeiraColuna) + '</th>' +
+      d.colunas.map(function (n) { return '<th>' + esc(n) + '</th>'; }).join('') + '</tr>';
+    const tbody = d.linhas.map(function (l) {
+      const vals = d.colunas.map(function (_, i) { return String(l.vals[i] || ''); });
+      const cls = l.neg ? ' class="total"' : '';
+      const soPrimeira = d.colunas.length > 1 && vals[0].trim() && vals.slice(1).every(function (v) { return !v.trim(); });
+      if (soPrimeira) {
+        return '<tr' + cls + '><td>' + esc(l.rot) + '</td><td colspan="' + d.colunas.length + '">' + cel(vals[0]) + '</td></tr>';
+      }
+      return '<tr' + cls + '><td>' + esc(l.rot) + '</td>' + vals.map(function (v, i) {
+        return '<td' + (i === d.destaqueCol ? ' class="destaque"' : '') + '>' + cel(v) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    tabelaHtml = '<table class="comparativo"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+  }
 
   const pagina3 = `
 <section class="pagina">
   <div class="bloco">
     <h2 class="secao">${esc(d.tituloComp)}</h2>
     <p class="intro">${rich(d.textoComp)}</p>
-    <table class="comparativo">
-      <thead>${thead}</thead>
-      <tbody>${tbody}</tbody>
-    </table>
+    ${tabelaHtml}
     ${d.notaTabela.trim() ? '<p class="nota">' + rich(d.notaTabela) + '</p>' : ''}
   </div>
   ${d.recomendacao.trim() ? `

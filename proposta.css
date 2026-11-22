@@ -513,21 +513,120 @@ table.comparativo{
     page-break-inside:avoid;
 }
 
-/* --------- PÁGINA DE DESCRITIVO DE COBERTURAS --------- */
+/* --------- PÁGINA DE DESCRITIVO DE COBERTURAS (CAIXINHAS) --------- */
 .grupo-cob{
     margin-bottom:14px;
     break-inside:avoid;
     page-break-inside:avoid;
 }
 .subsecao-cob{
-    font-size:11.5pt;
+    font-size:10.5pt;
+    text-transform:uppercase;
+    letter-spacing:.4px;
     color:var(--azul-escuro);
     border-left:4px solid var(--dourado);
     padding-left:8px;
-    margin-bottom:7px;
+    margin-bottom:8px;
 }
-.cob-lista li{
-    font-size:9.5pt;
-    line-height:1.4;
-    margin-bottom:5px;
+.cob-grid{
+    gap:8px;
+}
+.card-cob{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    border:1px solid var(--borda);
+    border-radius:4px;
+    padding:8px 10px;
+    background:#fff;
+}
+.cob-icone{
+    flex-shrink:0;
+    width:26px;
+    height:26px;
+    border-radius:5px;
+    background:var(--dourado-claro);
+    color:var(--dourado);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:1px;
+}
+.cob-icone svg{
+    width:15px;
+    height:15px;
+}
+.cob-nome{
+    font-size:9pt;
+    font-weight:700;
+    color:var(--azul-escuro);
+    line-height:1.2;
+    margin-bottom:2px;
+}
+.cob-desc{
+    font-size:8pt;
+    color:var(--texto-suave);
+    line-height:1.32;
+}
+
+/* --------- TABELA MATRICIAL (LIMITE DE GARANTIA + FRANQUIA) --------- */
+table.tabela-matriz{
+    font-size:8pt;
+}
+table.tabela-matriz thead tr:first-child th:first-child{
+    background:transparent;
+    color:var(--azul-escuro);
+    border-bottom:1.5px solid var(--azul-escuro);
+    vertical-align:bottom;
+}
+table.tabela-matriz thead tr:first-child th.th-seg{
+    text-align:center;
+    border-left:1px solid rgba(255,255,255,.25);
+    padding:7px 6px;
+}
+table.tabela-matriz thead tr:first-child th.th-destaque{
+    background:var(--dourado);
+    color:var(--azul-escuro);
+}
+table.tabela-matriz thead tr:nth-child(2) th.sub-th{
+    background:#dbe7f8;
+    color:var(--azul-escuro);
+    font-size:7.3pt;
+    font-weight:700;
+    text-align:center;
+    padding:5px 4px;
+    border-left:1px solid #c3d4ee;
+}
+table.tabela-matriz thead tr:nth-child(2) th.sub-destaque{
+    background:#faecc8;
+    color:var(--azul-escuro);
+}
+table.tabela-matriz tbody td{
+    padding:5px 6px;
+    text-align:center;
+    border-left:1px solid #edf0f7;
+}
+table.tabela-matriz tbody td:first-child{
+    background:var(--azul-escuro);
+    color:#fff;
+    font-weight:600;
+    text-align:left;
+    padding:6px 8px;
+    border-left:none;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+table.tabela-matriz tbody tr.linha-resumo:first-of-type td{
+    border-top:2px solid var(--azul-escuro);
+}
+table.tabela-matriz tbody tr.linha-resumo td:not(:first-child){
+    font-weight:600;
+    background:#f7f9fc;
+}
+table.tabela-matriz tbody tr.linha-resumo td.destaque{
+    background:#fff8eb;
+}
+table.tabela-matriz tbody tr.linha-resumo.total td:not(:first-child){
+    font-weight:700;
+    font-size:8.6pt;
+    color:var(--azul-escuro);
 }

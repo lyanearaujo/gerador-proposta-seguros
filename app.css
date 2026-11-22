@@ -135,3 +135,15 @@ input[type=text]:focus, textarea:focus{ outline:2px solid #9db4ef; border-color:
 .cob-item input{ margin-top:2px; }
 .campo-cob-custom{ margin-top:4px; font-size:13px; }
 .campo-cob-custom[hidden]{ display:none; }
+
+/* ---- tabela matricial (Empresarial: Limite + Franquia) ---- */
+.tab-matriz-ed .sub-th-ed{
+  background:#e9f0fa; color:var(--azul); font-size:11px; text-align:center; font-weight:700;
+}
+.tab-matriz-ed .nome-cob-ed{
+  font-size:12px; font-weight:600; color:var(--azul); min-width:170px;
+}
+.tab-matriz-ed td input{ min-width:110px; font-size:12px; padding:5px 7px; }
+.tab-matriz-ed .tr-resumo-ed td{ background:#f5f7fb; border-top:2px solid #cbd6ea; }
+.tab-matriz-ed .tr-total-ed td{ background:#edf2fc; font-weight:700; }
+.tab-matriz-ed .aviso-tab-vazia{ text-align:center; color:#6c7a96; padding:14px; font-size:12px; }
