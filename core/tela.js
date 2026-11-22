@@ -3,7 +3,7 @@
    core/tela.js  -  Controle da interface, prévia, rascunho e PDF
    ===================================================================== */
 
-const LS_RASCUNHO = 'neu_proposta_rascunho_v5';
+const LS_RASCUNHO = 'neu_proposta_rascunho_v6';
 const LS_CORRETORA = 'neu_corretora_v1';
 
 const $ = function (s, r) { return (r || document).querySelector(s); };
@@ -58,11 +58,11 @@ function normalizarEstado(obj) {
   });
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  e.versao = 5;
+  e.versao = 6;
   return e;
 }
 
-let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v4') || lerLS('neu_proposta_rascunho_v3');
+let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v5') || lerLS('neu_proposta_rascunho_v4');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
 
@@ -119,7 +119,7 @@ frame.addEventListener('load', function () {
   framePronto = true;
   atualizarPreview();
 });
-frame.srcdoc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><link rel="stylesheet" href="proposta.css"></head><body></body></html>';
+frame.srcdoc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><link rel="stylesheet" href="proposta.css?v=' + (window.VERSAO_APP || Date.now()) + '"></head><body></body></html>';
 window.addEventListener('resize', ajustarPreview);
 
 /* ---------- montagem dinâmica do menu de produtos ---------- */
@@ -487,7 +487,7 @@ function sincronizarForm() {
     function () { return { t: '', x: '' }; }, 'Adicionar destaque');
 
   editorLista($('#lista-cards'), d.cards,
-    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 5 dias' }, { k: 'd', rot: 'Detalhe (opcional)', ph: '' }],
+    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 12 meses' }, { k: 'd', rot: 'Detalhe (opcional)', ph: '' }],
     function () { return { r: '', v: '', d: '' }; }, 'Adicionar quadro');
 
   editorLista($('#lista-analise'), d.analise,

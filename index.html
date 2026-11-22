@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerador de Propostas</title>
-  <link rel="stylesheet" href="app.css">
+  <script>
+    window.VERSAO_APP = Date.now();
+    document.write('<link rel="stylesheet" href="app.css?v=' + window.VERSAO_APP + '">');
+  </script>
 </head>
 <body>
 
@@ -49,7 +52,6 @@
       <summary>3. Abertura e destaques</summary>
       <div class="conteudo">
         <label>Subtítulo do seguro <input type="text" data-path="c.tipoTexto"></label>
-        <label>Selo de vigência (retângulo no topo de Dados da Proposta) <input type="text" data-path="c.seloVigencia" placeholder="Ex.: Vigência do seguro: 12 meses"></label>
         <label>Texto de abertura <textarea rows="4" data-path="c.intro"></textarea></label>
         <p class="ajuda">Destaques principais (aparecem como tópicos):</p>
         <div id="lista-destaques" class="lista"></div>
@@ -145,11 +147,16 @@
 
 <div id="aviso" class="toast" hidden></div>
 
-<script>window.PRODUTOS = {};</script>
-<script src="produtos/rcp.js"></script>
-<script src="produtos/patrimonial.js"></script>
-
-<script src="core/motor.js"></script>
-<script src="core/tela.js"></script>
+<script>
+  window.PRODUTOS = {};
+  [
+    'produtos/rcp.js',
+    'produtos/patrimonial.js',
+    'core/motor.js',
+    'core/tela.js'
+  ].forEach(function (arquivo) {
+    document.write('<script src="' + arquivo + '?v=' + window.VERSAO_APP + '"><\/script>');
+  });
+</script>
 </body>
 </html>

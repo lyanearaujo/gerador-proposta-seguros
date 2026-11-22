@@ -7,8 +7,8 @@ const CORRETORA_PADRAO = {
   nome: 'Maria Neuresy Araújo',
   susep: '212131246',
   empresa: 'Neu Corretora de Seguros',
-  telefones: '(83) 98896-1030 | (83) 99100-7297',
-  email: 'neucorretora@neucorretora.com.br',
+  telefones: '(83) 98896-1030',
+  email: 'maria.neuresy@neucorretora.com.br',
   end1: 'R. Prof. Joaquim Santiago, 22, sala 204',
   end2: 'Expedicionários, João Pessoa-PB - CEP 58041-030',
   diferenciais: [
@@ -38,7 +38,7 @@ function estadoPadrao(tipo) {
     conteudos[k] = window.PRODUTOS[k].conteudoPadrao(LEI_NOTA);
   });
   return {
-    versao: 5,
+    versao: 6,
     tipo: tipo,
     capa: true,
     cliente: '',
@@ -240,8 +240,6 @@ function montarProposta(e, c) {
     }
   }
 
-  const seloVigencia = String(d.seloVigencia || '').trim();
-
   const pagina2 = `
 <section class="pagina">
   ${e.capa ? '' : `
@@ -254,10 +252,7 @@ function montarProposta(e, c) {
     <strong>${esc(nome)}</strong>
   </div>`}
   <div class="bloco">
-    <div class="secao-topo">
-      <h2 class="secao">Dados da Proposta</h2>
-      ${seloVigencia ? '<div class="selo-vigencia">' + esc(seloVigencia) + '</div>' : ''}
-    </div>
+    <h2 class="secao">Dados da Proposta</h2>
     <p class="intro">${rich(d.intro)}</p>
     ${destaques.length ? '<ul class="destaques">' + destaques.map(function (x) {
       return '<li>' + (x.t ? '<strong>' + esc(x.t) + '</strong> ' : '') + rich(x.x) + '</li>';

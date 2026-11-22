@@ -6,7 +6,7 @@ window.PRODUTOS.patrimonial = {
   aceitaCpf: false,
   mostraEndereco: true,
   tabelaMatrizCoberturas: true,
-  dicaCards: 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, validade da cotação, valor em risco...',
+  dicaCards: 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, vigências, valor em risco...',
 
   gruposCoberturas: [
     {
@@ -138,7 +138,6 @@ window.PRODUTOS.patrimonial = {
   conteudoPadrao: function (leiNota) {
     return {
       tipoTexto: 'Seguro Patrimonial Empresarial',
-      seloVigencia: 'Vigência do seguro: 12 meses',
       intro: 'O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades apresentadas, com o objetivo de oferecer a melhor relação entre proteção e investimento para a atividade da sua empresa.',
       destaques: [
         { t: 'Foco Estrutural e Responsabilidade Civil:', x: 'Mapeamento prioritário contra danos à infraestrutura física do imóvel e proteção financeira dedicada para eventuais danos materiais e corporais causados a terceiros durante a operação comercial.' },
@@ -146,7 +145,8 @@ window.PRODUTOS.patrimonial = {
       ],
       cards: [
         { r: 'Enquadramento do risco', v: '', d: '' },
-        { r: 'Validade da cotação', v: '5 dias (corridos)', d: '' },
+        { r: 'Vigência da apólice', v: '12 meses', d: '' },
+        { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
         { r: 'Valor em risco (prédio e conteúdo)', v: '', d: '' }
       ],
       coberturasSelecionadas: ['incendio', 'danos_eletricos', 'vendaval', 'rc_operacoes'],
@@ -190,7 +190,8 @@ window.PRODUTOS.patrimonial = {
     d.intro = d.intro.replace('a atividade da sua empresa', 'a atividade de comercialização e armazenamento');
     d.cards = [
       { r: 'Enquadramento do risco', v: 'Lojas/Depósitos, Supermercados', d: '' },
-      { r: 'Validade da cotação', v: '5 dias (corridos)', d: '' },
+      { r: 'Vigência da apólice', v: '12 meses', d: '' },
+      { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
       { r: 'Valor em risco (prédio e conteúdo)', v: 'R$ 9.047.677,00', d: '' }
     ];
     d.coberturasSelecionadas = [
@@ -275,7 +276,6 @@ window.PRODUTOS.patrimonial = {
     const valsCob = d.valoresCoberturas || {};
     const res = d.resumoValores || { liquido: [], total: [], pagamento: [] };
 
-    /* Larguras matematicamente idênticas para todas as seguradoras e subcolunas */
     const largCob = numSeg >= 4 ? 22 : 25;
     const largSub = ((100 - largCob) / (numSeg * 2)).toFixed(4) + '%';
     let colgroup = '<colgroup><col style="width:' + largCob + '%">';
