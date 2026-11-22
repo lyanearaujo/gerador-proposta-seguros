@@ -3,7 +3,7 @@
    core/tela.js  -  Controle da interface, prévia, rascunho e PDF
    ===================================================================== */
 
-const LS_RASCUNHO = 'neu_proposta_rascunho_v4';
+const LS_RASCUNHO = 'neu_proposta_rascunho_v5';
 const LS_CORRETORA = 'neu_corretora_v1';
 
 const $ = function (s, r) { return (r || document).querySelector(s); };
@@ -52,14 +52,17 @@ function normalizarEstado(obj) {
     if (padrao.resumoValores) {
       e.conteudo[k].resumoValores = Object.assign({ liquido: [], total: [], pagamento: [] }, salvo.resumoValores || {});
     }
+    if (!Array.isArray(e.conteudo[k].requisitos)) {
+      e.conteudo[k].requisitos = (padrao.requisitos || []).map(function (x) { return Object.assign({}, x); });
+    }
   });
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  e.versao = 4;
+  e.versao = 5;
   return e;
 }
 
-let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v3') || lerLS('neu_proposta_rascunho_v2');
+let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v4') || lerLS('neu_proposta_rascunho_v3');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
 
@@ -200,7 +203,6 @@ function editorCoberturas(prod) {
         if (chk.checked && idx < 0) d.coberturasSelecionadas.push(it.id);
         if (!chk.checked && idx >= 0) d.coberturasSelecionadas.splice(idx, 1);
         if (campoCustom) campoCustom.hidden = !chk.checked;
-        /* Atualiza a tabela de valores automaticamente quando marca/desmarca cobertura */
         if (prod.tabelaMatrizCoberturas) editorTabelaMatriz(prod);
         mudou();
       });
@@ -255,7 +257,6 @@ function editorTabelaMatriz(prod) {
   const ativas = prod.obterCoberturasAtivas(d);
   const tab = h('table', { class: 'tab-ed tab-matriz-ed' });
 
-  /* Linha 1 do cabeçalho: Seguradoras */
   const cab1 = h('tr');
   const nenhuma = h('input', { type: 'radio', name: 'destaque-col' });
   nenhuma.checked = d.destaqueCol < 0 || d.destaqueCol >= d.colunas.length;
@@ -297,7 +298,6 @@ function editorTabelaMatriz(prod) {
   cab1.append(h('th', { rowspan: 2 }, [addCol]));
   tab.append(cab1);
 
-  /* Linha 2 do cabeçalho: Limite de garantia | Franquia */
   const cab2 = h('tr');
   d.colunas.forEach(function () {
     cab2.append(h('th', { class: 'sub-th-ed', text: 'Limite de garantia' }));
@@ -305,7 +305,6 @@ function editorTabelaMatriz(prod) {
   });
   tab.append(cab2);
 
-  /* Linhas das coberturas marcadas */
   if (!ativas.length) {
     const trVazio = h('tr');
     trVazio.append(h('td', { colspan: 1 + (d.colunas.length * 2), class: 'aviso-tab-vazia', text: 'Marque as coberturas na seção 5 acima para preencher os limites e franquias aqui.' }));
@@ -344,7 +343,6 @@ function editorTabelaMatriz(prod) {
     });
   }
 
-  /* Linhas fixas finais: Valor Líquido, Valor Total e Forma de Pagamento */
   const linhasFinais = [
     { chave: 'liquido', rotulo: 'Valor Líquido', ph: 'Ex.: 18407,38', formatarMoeda: true },
     { chave: 'total', rotulo: 'Valor Total (Bruto)', ph: 'Ex.: 19765,84', formatarMoeda: true, destaque: true },
@@ -502,6 +500,11 @@ function sincronizarForm() {
   editorLista($('#lista-riscos'), d.riscos,
     [{ k: 't', rot: 'Título em negrito', ph: 'Ex.: Extintores de Incêndio:' }, { k: 'x', rot: 'Texto', longo: true }],
     function () { return { t: '', x: '' }; }, 'Adicionar recomendação');
+
+  if (!Array.isArray(d.requisitos)) d.requisitos = [];
+  editorLista($('#lista-requisitos'), d.requisitos,
+    [{ k: 'x', rot: 'Requisito de aceitação', longo: true, ph: 'Ex.: Imóvel construído em alvenaria com cobertura incombustível.' }],
+    function () { return { x: '' }; }, 'Adicionar requisito');
 
   editorLista($('#lista-dif'), corretora.diferenciais,
     [{ k: 'x', rot: 'Diferencial' }],

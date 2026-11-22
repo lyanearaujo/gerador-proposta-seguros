@@ -11,6 +11,7 @@ window.PRODUTOS.rcp = {
   conteudoPadrao: function (leiNota) {
     return {
       tipoTexto: 'Seguro de Responsabilidade Civil Profissional (E&O)',
+      seloVigencia: 'Vigência do seguro: 12 meses',
       intro: 'O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades da sua assessoria contábil, com o objetivo de oferecer a melhor relação entre proteção e investimento para a sua atuação.',
       destaques: [
         { t: 'Foco na Proteção Profissional:', x: 'Mapeamento prioritário para resguardar o patrimônio da empresa contra eventuais reclamações de terceiros decorrentes de falhas na prestação de serviços contábeis.' },
@@ -47,6 +48,8 @@ window.PRODUTOS.rcp = {
         { t: 'Contrato de prestação de serviços com a base de clientes', x: '' },
         { t: 'Treinamento e LGPD:', x: 'Reforçar as políticas de conformidade e tratamento de dados pessoais com toda a equipe, mitigando os riscos associados à quebra de sigilo profissional e vazamento de informações.' }
       ],
+      tituloRequisitos: 'Requisitos de Aceitação do Seguro',
+      requisitos: [],
       notaLegal: leiNota
     };
   },

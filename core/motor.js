@@ -38,7 +38,7 @@ function estadoPadrao(tipo) {
     conteudos[k] = window.PRODUTOS[k].conteudoPadrao(LEI_NOTA);
   });
   return {
-    versao: 4,
+    versao: 5,
     tipo: tipo,
     capa: true,
     cliente: '',
@@ -240,6 +240,8 @@ function montarProposta(e, c) {
     }
   }
 
+  const seloVigencia = String(d.seloVigencia || '').trim();
+
   const pagina2 = `
 <section class="pagina">
   ${e.capa ? '' : `
@@ -252,7 +254,10 @@ function montarProposta(e, c) {
     <strong>${esc(nome)}</strong>
   </div>`}
   <div class="bloco">
-    <h2 class="secao">Dados da Proposta</h2>
+    <div class="secao-topo">
+      <h2 class="secao">Dados da Proposta</h2>
+      ${seloVigencia ? '<div class="selo-vigencia">' + esc(seloVigencia) + '</div>' : ''}
+    </div>
     <p class="intro">${rich(d.intro)}</p>
     ${destaques.length ? '<ul class="destaques">' + destaques.map(function (x) {
       return '<li>' + (x.t ? '<strong>' + esc(x.t) + '</strong> ' : '') + rich(x.x) + '</li>';
@@ -307,6 +312,7 @@ function montarProposta(e, c) {
 </section>`;
 
   const riscos = d.riscos.filter(function (x) { return x.t || x.x; });
+  const requisitos = (d.requisitos || []).filter(function (x) { return x.x && x.x.trim(); });
   const difs = c.diferenciais.filter(function (x) { return x.x && x.x.trim(); });
 
   const assinatura = e.capa ? '' : `
@@ -332,6 +338,17 @@ function montarProposta(e, c) {
       <ul class="caixa-lista">
         ${riscos.map(function (x) {
           return '<li>' + (x.t ? '<strong>' + esc(x.t) + '</strong> ' : '') + rich(x.x) + '</li>';
+        }).join('')}
+      </ul>
+    </div>
+  </div>` : ''}
+  ${requisitos.length ? `
+  <div class="bloco evitar-quebra">
+    <h2 class="secao">${esc(d.tituloRequisitos || 'Requisitos de Aceitação do Seguro')}</h2>
+    <div class="caixa caixa-requisitos">
+      <ul class="caixa-lista">
+        ${requisitos.map(function (x) {
+          return '<li>' + rich(x.x) + '</li>';
         }).join('')}
       </ul>
     </div>

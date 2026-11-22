@@ -6,7 +6,7 @@ window.PRODUTOS.patrimonial = {
   aceitaCpf: false,
   mostraEndereco: true,
   tabelaMatrizCoberturas: true,
-  dicaCards: 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, vigência, valor em risco...',
+  dicaCards: 'O primeiro quadro (CNPJ e endereço) é automático. Aqui entram os demais: enquadramento, validade da cotação, valor em risco...',
 
   gruposCoberturas: [
     {
@@ -124,7 +124,6 @@ window.PRODUTOS.patrimonial = {
     }
   ],
 
-  /* Retorna a lista ordenada das coberturas marcadas no formulário */
   obterCoberturasAtivas: function (d) {
     const selec = Array.isArray(d.coberturasSelecionadas) ? d.coberturasSelecionadas : [];
     const lista = [];
@@ -139,6 +138,7 @@ window.PRODUTOS.patrimonial = {
   conteudoPadrao: function (leiNota) {
     return {
       tipoTexto: 'Seguro Patrimonial Empresarial',
+      seloVigencia: 'Vigência do seguro: 12 meses',
       intro: 'O estudo foi elaborado com base nas informações previamente coletadas, considerando o perfil e as necessidades apresentadas, com o objetivo de oferecer a melhor relação entre proteção e investimento para a atividade da sua empresa.',
       destaques: [
         { t: 'Foco Estrutural e Responsabilidade Civil:', x: 'Mapeamento prioritário contra danos à infraestrutura física do imóvel e proteção financeira dedicada para eventuais danos materiais e corporais causados a terceiros durante a operação comercial.' },
@@ -146,7 +146,7 @@ window.PRODUTOS.patrimonial = {
       ],
       cards: [
         { r: 'Enquadramento do risco', v: '', d: '' },
-        { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
+        { r: 'Validade da cotação', v: '5 dias (corridos)', d: '' },
         { r: 'Valor em risco (prédio e conteúdo)', v: '', d: '' }
       ],
       coberturasSelecionadas: ['incendio', 'danos_eletricos', 'vendaval', 'rc_operacoes'],
@@ -156,9 +156,6 @@ window.PRODUTOS.patrimonial = {
       textoComp: 'Abaixo, apresentamos o comparativo técnico de limites, franquias e condições comerciais entre as seguradoras:',
       primeiraColuna: 'Coberturas / Condições',
       colunas: ['Seguradora 1', 'Seguradora 2'],
-      /* Estrutura específica para tabela matricial:
-         valoresCoberturas: { [idCobertura]: [ { lmg: '', franq: '' }, { lmg: '', franq: '' } ] }
-         resumoValores: { liquido: ['', ''], total: ['', ''], pagamento: ['', ''] } */
       valoresCoberturas: {},
       resumoValores: {
         liquido: ['', ''],
@@ -176,6 +173,12 @@ window.PRODUTOS.patrimonial = {
         { t: 'Armazenamento de Materiais:', x: 'Organizar e manter mercadorias e matérias-primas com distância mínima de 1 (um) metro em relação a luminárias, cobertura (telhado), estruturas metálicas, instalações elétricas e fontes de calor.' },
         { t: 'Corredores de Circulação:', x: 'Manter os corredores livres e organizados, preservando largura mínima de 1 (um) metro para facilitar a circulação e o acesso aos equipamentos de combate a incêndio.' }
       ],
+      tituloRequisitos: 'Requisitos de Aceitação do Seguro',
+      requisitos: [
+        { x: 'Imóvel construído em alvenaria (estrutura e paredes) com cobertura incombustível.' },
+        { x: 'Existência de equipamentos básicos de combate a incêndio (extintores dentro da validade).' },
+        { x: 'Sujeito à inspeção prévia de risco pela seguradora escolhida, caso exigido na emissão.' }
+      ],
       notaLegal: leiNota
     };
   },
@@ -187,7 +190,7 @@ window.PRODUTOS.patrimonial = {
     d.intro = d.intro.replace('a atividade da sua empresa', 'a atividade de comercialização e armazenamento');
     d.cards = [
       { r: 'Enquadramento do risco', v: 'Lojas/Depósitos, Supermercados', d: '' },
-      { r: 'Vigência da proposta', v: 'Validade de 5 dias (corridos)', d: '' },
+      { r: 'Validade da cotação', v: '5 dias (corridos)', d: '' },
       { r: 'Valor em risco (prédio e conteúdo)', v: 'R$ 9.047.677,00', d: '' }
     ];
     d.coberturasSelecionadas = [
@@ -268,23 +271,29 @@ window.PRODUTOS.patrimonial = {
 
   renderizarTabelaComparativa: function (d, utils) {
     const ativas = this.obterCoberturasAtivas(d);
-    const numSeg = d.colunas.length;
+    const numSeg = Math.max(1, d.colunas.length);
     const valsCob = d.valoresCoberturas || {};
     const res = d.resumoValores || { liquido: [], total: [], pagamento: [] };
 
-    /* Cabeçalho linha 1: Coluna das coberturas (rowspan=2) + nome de cada seguradora (colspan=2) */
+    /* Larguras matematicamente idênticas para todas as seguradoras e subcolunas */
+    const largCob = numSeg >= 4 ? 22 : 25;
+    const largSub = ((100 - largCob) / (numSeg * 2)).toFixed(4) + '%';
+    let colgroup = '<colgroup><col style="width:' + largCob + '%">';
+    for (let i = 0; i < numSeg * 2; i++) {
+      colgroup += '<col style="width:' + largSub + '">';
+    }
+    colgroup += '</colgroup>';
+
     const thLinha1 = '<th rowspan="2">' + utils.esc(d.primeiraColuna || 'Coberturas') + '</th>' +
       d.colunas.map(function (nome, i) {
         return '<th colspan="2" class="th-seg' + (i === d.destaqueCol ? ' th-destaque' : '') + '">' + utils.esc(nome) + '</th>';
       }).join('');
 
-    /* Cabeçalho linha 2: Subcolunas Limite de Garantia | Franquia para cada seguradora */
     const thLinha2 = d.colunas.map(function (_, i) {
       const cls = i === d.destaqueCol ? ' class="sub-th sub-destaque"' : ' class="sub-th"';
       return '<th' + cls + '>Limite de Garantia</th><th' + cls + '>Franquia</th>';
     }).join('');
 
-    /* Linhas das coberturas selecionadas */
     const linhasCob = ativas.map(function (cob) {
       const arr = valsCob[cob.id] || [];
       const tds = d.colunas.map(function (_, i) {
@@ -296,7 +305,6 @@ window.PRODUTOS.patrimonial = {
       return '<tr><td>' + utils.esc(cob.nome) + '</td>' + tds + '</tr>';
     }).join('');
 
-    /* Linhas finais unificadas (colspan=2 por seguradora) */
     const montarLinhaResumo = function (rotulo, arrVals, classeLinha) {
       const tds = d.colunas.map(function (_, i) {
         const cls = i === d.destaqueCol ? ' class="destaque"' : '';
@@ -310,6 +318,7 @@ window.PRODUTOS.patrimonial = {
     const linhaPagto = montarLinhaResumo('Forma de Pagamento', res.pagamento, 'linha-resumo linha-pagto');
 
     return '<table class="comparativo tabela-matriz">' +
+      colgroup +
       '<thead><tr>' + thLinha1 + '</tr><tr>' + thLinha2 + '</tr></thead>' +
       '<tbody>' + linhasCob + linhaLiquido + linhaTotal + linhaPagto + '</tbody>' +
     '</table>';

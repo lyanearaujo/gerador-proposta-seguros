@@ -49,6 +49,7 @@
       <summary>3. Abertura e destaques</summary>
       <div class="conteudo">
         <label>Subtítulo do seguro <input type="text" data-path="c.tipoTexto"></label>
+        <label>Selo de vigência (retângulo no topo de Dados da Proposta) <input type="text" data-path="c.seloVigencia" placeholder="Ex.: Vigência do seguro: 12 meses"></label>
         <label>Texto de abertura <textarea rows="4" data-path="c.intro"></textarea></label>
         <p class="ajuda">Destaques principais (aparecem como tópicos):</p>
         <div id="lista-destaques" class="lista"></div>
@@ -89,7 +90,6 @@
         <p class="ajuda">
           <strong>Dicas:</strong> digite só números (ex.: 19765,84) e o sistema coloca "R$" e os pontos.
           Para escrever um detalhe em cinza abaixo do valor, use a barra: <em>R$ 2.823,70 | (7x - Débito em conta)</em>.
-          Se preencher só a 1ª coluna de uma linha, o texto ocupa a linha inteira.
         </p>
         <label>Nota abaixo da tabela (opcional) <textarea rows="2" data-path="c.notaTabela"></textarea></label>
       </div>
@@ -104,11 +104,17 @@
     </details>
 
     <details>
-      <summary class="sec-numerada" data-titulo="Gerenciamento de riscos">Gerenciamento de riscos</summary>
+      <summary class="sec-numerada" data-titulo="Gerenciamento de riscos e requisitos de aceitação">Gerenciamento de riscos e requisitos de aceitação</summary>
       <div class="conteudo">
-        <label>Título da seção <input type="text" data-path="c.tituloRiscos"></label>
+        <label>Título do Gerenciamento de Riscos <input type="text" data-path="c.tituloRiscos"></label>
         <label>Texto de abertura <textarea rows="3" data-path="c.introRiscos"></textarea></label>
         <div id="lista-riscos" class="lista"></div>
+
+        <hr style="border:0; border-top:1px solid var(--borda); margin:8px 0;">
+
+        <label>Título dos Requisitos de Aceitação <input type="text" data-path="c.tituloRequisitos"></label>
+        <p class="ajuda">Lista breve de requisitos exigidos pela seguradora para aceitação do risco (deixe vazio se não quiser exibir este bloco):</p>
+        <div id="lista-requisitos" class="lista"></div>
       </div>
     </details>
 
