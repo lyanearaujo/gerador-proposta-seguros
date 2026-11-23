@@ -38,7 +38,7 @@ function estadoPadrao(tipo) {
     conteudos[k] = window.PRODUTOS[k].conteudoPadrao(LEI_NOTA);
   });
   return {
-    versao: 6,
+    versao: 7,
     tipo: tipo,
     capa: true,
     cliente: '',
@@ -151,7 +151,7 @@ function validarProposta(e) {
   const prod = obterProduto(e.tipo);
   const d = e.conteudo[e.tipo];
   const p = [];
-  if (!e.cliente.trim()) p.push('Falta o nome do cliente.');
+  if (!e.cliente.trim()) p.push('Falta o nome do cliente / condomínio.');
   if (!e.cnpj.trim()) p.push(prod.aceitaCpf ? 'Falta o CPF/CNPJ.' : 'Falta o CNPJ.');
   else if (!cpfCnpjValido(e.cnpj)) p.push(prod.aceitaCpf ? 'O CPF/CNPJ digitado parece inválido.' : 'O CNPJ digitado parece inválido.');
 
@@ -192,7 +192,9 @@ function montarProposta(e, c) {
 
   const numDoc = e.cnpj.replace(/\D/g, '');
   const rotuloDoc = (numDoc.length <= 11 && numDoc.length > 0) ? 'CPF: ' : 'CNPJ: ';
-  const tituloDoc = (prod.aceitaCpf && numDoc.length <= 11) ? 'Dados do profissional' : 'Dados da empresa';
+  const tituloDoc = e.tipo === 'condominio'
+    ? 'Dados do condomínio'
+    : ((prod.aceitaCpf && numDoc.length <= 11) ? 'Dados do profissional' : 'Dados da empresa');
 
   const capa = !e.capa ? '' : `
 <section class="pagina capa">
@@ -306,6 +308,10 @@ function montarProposta(e, c) {
   ${rodape}
 </section>`;
 
+  const paginaConcorrente = prod.renderizarPaginaConcorrente
+    ? prod.renderizarPaginaConcorrente(d, rodape, { esc: esc, rich: rich, cel: cel })
+    : '';
+
   const riscos = d.riscos.filter(function (x) { return x.t || x.x; });
   const requisitos = (d.requisitos || []).filter(function (x) { return x.x && x.x.trim(); });
   const difs = c.diferenciais.filter(function (x) { return x.x && x.x.trim(); });
@@ -376,5 +382,5 @@ function montarProposta(e, c) {
   </div>
 </section>`;
 
-  return capa + pagina2 + paginaExtra + pagina3 + pagina4 + final;
+  return capa + pagina2 + paginaExtra + pagina3 + paginaConcorrente + pagina4 + final;
 }

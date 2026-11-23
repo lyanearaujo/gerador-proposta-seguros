@@ -66,6 +66,11 @@ body[data-tipo="patrimonial"] {
     --imagem-final: url("img/emp.jpg");
 }
 
+body[data-tipo="condominio"] {
+    --imagem-capa: url("img/cond.jpg");
+    --imagem-final: url("img/cond.jpg");
+}
+
 /* Esconde elementos indesejados caso precisem de regras estáticas,
    mas agora o gerador unificou o layout para todos. */
 body[data-capa="nao"] .capa{
@@ -641,4 +646,9 @@ table.tabela-matriz tbody tr.linha-resumo.total td:not(:first-child){
     font-weight:700;
     font-size:8.4pt;
     color:var(--azul-escuro);
+}
+
+/* Faz o último retângulo ocupar a largura total quando a quantidade de quadros for ímpar */
+.cards:not(.tres):not(.cob-grid) .card:last-child:nth-child(odd){
+    grid-column: 1 / -1;
 }

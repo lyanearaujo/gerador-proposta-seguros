@@ -40,9 +40,9 @@
     </details>
 
     <details open>
-      <summary>2. Dados do cliente</summary>
+      <summary>2. Dados do cliente / condomínio</summary>
       <div class="conteudo">
-        <label>Nome do cliente / empresa <input type="text" data-path="cliente" placeholder="Ex.: Costa e Costa Assessoria Contábil LTDA"></label>
+        <label>Nome do cliente / condomínio <input type="text" data-path="cliente" placeholder="Ex.: Condomínio Residencial Jardim das Acácias"></label>
         <label id="label-doc">CPF/CNPJ <input type="text" data-path="cnpj" data-mask="cnpj" inputmode="numeric" placeholder="000.000.000-00 ou 00.000.000/0000-00"></label>
         <label id="campo-endereco">Endereço (opcional) <input type="text" data-path="endereco" placeholder="Rua, número, bairro, cidade/UF - CEP"></label>
       </div>
@@ -59,7 +59,7 @@
     </details>
 
     <details>
-      <summary>4. Resumo do risco</summary>
+      <summary>4. Resumo do risco e dados estruturais</summary>
       <div class="conteudo">
         <p class="ajuda" id="dica-cards"></p>
         <div id="lista-cards" class="lista"></div>
@@ -94,6 +94,22 @@
           Para escrever um detalhe em cinza abaixo do valor, use a barra: <em>R$ 2.823,70 | (7x - Débito em conta)</em>.
         </p>
         <label>Nota abaixo da tabela (opcional) <textarea rows="2" data-path="c.notaTabela"></textarea></label>
+      </div>
+    </details>
+
+    <details id="secao-concorrente" hidden>
+      <summary class="sec-numerada" data-titulo="Comparativo com proposta concorrente (opcional)">Comparativo com proposta concorrente (opcional)</summary>
+      <div class="conteudo">
+        <label class="check"><input type="checkbox" id="chk-concorrente"> Incluir página de comparativo com proposta concorrente</label>
+        <div id="box-concorrente" hidden style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+          <label>Título da página <input type="text" data-path="c.comparativoConcorrente.titulo"></label>
+          <label>Texto introdutório <textarea rows="2" data-path="c.comparativoConcorrente.intro"></textarea></label>
+          <label>Nome da coluna 1 (Concorrente) <input type="text" data-path="c.comparativoConcorrente.nomeConcorrente"></label>
+          <label>Nome da coluna 2 (Nossa Proposta) <input type="text" data-path="c.comparativoConcorrente.nomeNossa"></label>
+          <p class="ajuda">Itens comparados (coberturas, franquias ou valores):</p>
+          <div id="lista-concorrente" class="lista"></div>
+          <label>Conclusão do comparativo (opcional) <textarea rows="2" data-path="c.comparativoConcorrente.observacao"></textarea></label>
+        </div>
       </div>
     </details>
 
@@ -152,6 +168,7 @@
   [
     'produtos/rcp.js',
     'produtos/patrimonial.js',
+    'produtos/condominio.js',
     'core/motor.js',
     'core/tela.js'
   ].forEach(function (arquivo) {

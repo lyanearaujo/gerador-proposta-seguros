@@ -3,7 +3,7 @@
    core/tela.js  -  Controle da interface, prévia, rascunho e PDF
    ===================================================================== */
 
-const LS_RASCUNHO = 'neu_proposta_rascunho_v6';
+const LS_RASCUNHO = 'neu_proposta_rascunho_v7';
 const LS_CORRETORA = 'neu_corretora_v1';
 
 const $ = function (s, r) { return (r || document).querySelector(s); };
@@ -39,30 +39,41 @@ function normalizarEstado(obj) {
   Object.keys(window.PRODUTOS).forEach(function (k) {
     const padrao = conteudoPadrao(k);
     const salvo = (obj.conteudo || {})[k] || {};
-    e.conteudo[k] = Object.assign(padrao, salvo);
+    e.conteudo[k] = Object.assign({}, padrao, salvo);
+
     if (padrao.coberturasSelecionadas && !Array.isArray(e.conteudo[k].coberturasSelecionadas)) {
       e.conteudo[k].coberturasSelecionadas = padrao.coberturasSelecionadas.slice();
     }
-    if (padrao.coberturasCustom && typeof e.conteudo[k].coberturasCustom !== 'object') {
+    if (padrao.coberturasCustom && (!e.conteudo[k].coberturasCustom || typeof e.conteudo[k].coberturasCustom !== 'object')) {
       e.conteudo[k].coberturasCustom = Object.assign({}, padrao.coberturasCustom);
     }
-    if (padrao.valoresCoberturas && typeof e.conteudo[k].valoresCoberturas !== 'object') {
+    if (padrao.valoresCoberturas && (!e.conteudo[k].valoresCoberturas || typeof e.conteudo[k].valoresCoberturas !== 'object')) {
       e.conteudo[k].valoresCoberturas = {};
     }
     if (padrao.resumoValores) {
       e.conteudo[k].resumoValores = Object.assign({ liquido: [], total: [], pagamento: [] }, salvo.resumoValores || {});
     }
     if (!Array.isArray(e.conteudo[k].requisitos)) {
-      e.conteudo[k].requisitos = (padrao.requisitos || []).map(function (x) { return Object.assign({}, x); });
+      const reqBase = Array.isArray(padrao.requisitos) ? padrao.requisitos : [];
+      e.conteudo[k].requisitos = reqBase.map(function (x) { return Object.assign({}, x); });
+    }
+    if (padrao.comparativoConcorrente) {
+      const ccPadrao = padrao.comparativoConcorrente;
+      const ccSalvo = (salvo.comparativoConcorrente && typeof salvo.comparativoConcorrente === 'object') ? salvo.comparativoConcorrente : {};
+      e.conteudo[k].comparativoConcorrente = Object.assign({}, ccPadrao, ccSalvo);
+      if (!Array.isArray(e.conteudo[k].comparativoConcorrente.linhas)) {
+        const linhasBase = Array.isArray(ccPadrao.linhas) ? ccPadrao.linhas : [];
+        e.conteudo[k].comparativoConcorrente.linhas = linhasBase.map(function (x) { return Object.assign({}, x); });
+      }
     }
   });
 
   ['cliente', 'cnpj', 'endereco'].forEach(function (k) { e[k] = String(e[k] || ''); });
-  e.versao = 6;
+  e.versao = 7;
   return e;
 }
 
-let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v5') || lerLS('neu_proposta_rascunho_v4');
+let rascunho = lerLS(LS_RASCUNHO) || lerLS('neu_proposta_rascunho_v6') || lerLS('neu_proposta_rascunho_v5');
 let estado = normalizarEstado(rascunho && rascunho.estado);
 const conteudo = function () { return estado.conteudo[estado.tipo]; };
 
@@ -144,7 +155,12 @@ function resolver(path) {
   if (partes[0] === 'c') { alvo = conteudo(); partes.shift(); }
   else if (partes[0] === 'corr') { alvo = corretora; partes.shift(); }
   else alvo = estado;
-  return { obj: alvo, chave: partes.join('.') };
+  while (partes.length > 1) {
+    const k = partes.shift();
+    if (!alvo[k] || typeof alvo[k] !== 'object') alvo[k] = {};
+    alvo = alvo[k];
+  }
+  return { obj: alvo, chave: partes[0] };
 }
 
 $('#form').addEventListener('input', function (ev) {
@@ -244,7 +260,7 @@ function editorLista(cont, arr, campos, novo, rotuloAdd) {
   cont.append(add);
 }
 
-/* ---------- editor da tabela matricial (Empresarial: Limite + Franquia) ---------- */
+/* ---------- editor da tabela matricial (Empresarial/Condomínio: Limite + Franquia) ---------- */
 function editorTabelaMatriz(prod) {
   const d = conteudo();
   const cont = $('#editor-tabela');
@@ -344,9 +360,9 @@ function editorTabelaMatriz(prod) {
   }
 
   const linhasFinais = [
-    { chave: 'liquido', rotulo: 'Valor Líquido', ph: 'Ex.: 18407,38', formatarMoeda: true },
-    { chave: 'total', rotulo: 'Valor Total (Bruto)', ph: 'Ex.: 19765,84', formatarMoeda: true, destaque: true },
-    { chave: 'pagamento', rotulo: 'Forma de Pagamento', ph: 'Ex.: 7x sem juros - Débito em conta', formatarMoeda: false }
+    { chave: 'liquido', rotulo: 'Valor Líquido', ph: 'Ex.: 6840,00', formatarMoeda: true },
+    { chave: 'total', rotulo: 'Valor Total (Bruto)', ph: 'Ex.: 7344,79', formatarMoeda: true, destaque: true },
+    { chave: 'pagamento', rotulo: 'Forma de Pagamento', ph: 'Ex.: 6x sem juros - Débito em conta', formatarMoeda: false }
   ];
 
   linhasFinais.forEach(function (lf) {
@@ -451,6 +467,35 @@ function editorTabelaSimples() {
   cont.append(addLinha);
 }
 
+/* ---------- editor do comparativo com concorrente ---------- */
+function editorConcorrente(prod) {
+  const sec = $('#secao-concorrente');
+  const d = conteudo();
+  if (!prod.suportaComparativoConcorrente || !d.comparativoConcorrente) {
+    sec.hidden = true;
+    return;
+  }
+  sec.hidden = false;
+  const cc = d.comparativoConcorrente;
+  const chk = $('#chk-concorrente');
+  const box = $('#box-concorrente');
+  chk.checked = !!cc.ativo;
+  box.hidden = !cc.ativo;
+
+  chk.onchange = function () {
+    cc.ativo = chk.checked;
+    box.hidden = !cc.ativo;
+    mudou();
+  };
+
+  if (!Array.isArray(cc.linhas)) cc.linhas = [];
+  editorLista($('#lista-concorrente'), cc.linhas, [
+    { k: 'item', rot: 'Cobertura / Condição', ph: 'Ex.: Danos Elétricos' },
+    { k: 'concorrente', rot: 'Concorrente', ph: 'Ex.: R$ 60.000,00' },
+    { k: 'nossa', rot: 'Nossa Proposta', ph: 'Ex.: R$ 120.000,00' }
+  ], function () { return { item: '', concorrente: '', nossa: '' }; }, 'Adicionar item comparado');
+}
+
 /* ---------- sincroniza o formulário inteiro ---------- */
 function sincronizarForm() {
   const prod = obterProduto(estado.tipo);
@@ -475,9 +520,12 @@ function sincronizarForm() {
   $('#dica-analise').textContent = 'Escreva os pontos principais da análise do risco. Você pode deixar o título vazio e preencher só o texto, ou usar os dois.';
 
   editorCoberturas(prod);
+  editorConcorrente(prod);
 
   let num = prod.gruposCoberturas ? 6 : 5;
   $$('.sec-numerada').forEach(function (el) {
+    const pai = el.closest('details');
+    if (pai && pai.hidden) return;
     el.textContent = num + '. ' + el.dataset.titulo;
     num += 1;
   });
@@ -487,7 +535,7 @@ function sincronizarForm() {
     function () { return { t: '', x: '' }; }, 'Adicionar destaque');
 
   editorLista($('#lista-cards'), d.cards,
-    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 12 meses' }, { k: 'd', rot: 'Detalhe (opcional)', ph: '' }],
+    [{ k: 'r', rot: 'Título do quadro', ph: 'Ex.: Vigência da apólice' }, { k: 'v', rot: 'Informação principal', ph: 'Ex.: 12 meses' }, { k: 'd', rot: 'Detalhe (opcional)', ph: '' }],
     function () { return { r: '', v: '', d: '' }; }, 'Adicionar quadro');
 
   editorLista($('#lista-analise'), d.analise,
@@ -503,7 +551,7 @@ function sincronizarForm() {
 
   if (!Array.isArray(d.requisitos)) d.requisitos = [];
   editorLista($('#lista-requisitos'), d.requisitos,
-    [{ k: 'x', rot: 'Requisito de aceitação', longo: true, ph: 'Ex.: Imóvel construído em alvenaria com cobertura incombustível.' }],
+    [{ k: 'x', rot: 'Requisito de aceitação', longo: true, ph: 'Ex.: Edificação construída em alvenaria com cobertura incombustível.' }],
     function () { return { x: '' }; }, 'Adicionar requisito');
 
   editorLista($('#lista-dif'), corretora.diferenciais,
