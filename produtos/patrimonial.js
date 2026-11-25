@@ -46,7 +46,13 @@ window.PRODUTOS.patrimonial = {
           id: 'vidros',
           nome: 'Vidros',
           icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/><path d="M12 3v18"/></svg>',
-          desc: 'Cobre a quebra acidental de vidros, espelhos, vitrines, fachadas envidraçadas e letreiros fixos.'
+          desc: 'Cobre a quebra acidental de vidros, espelhos, vitrines e fachadas envidraçadas instalados no imóvel.'
+        },
+        {
+          id: 'anuncios_luminosos',
+          nome: 'Anúncios Luminosos',
+          icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h12"/><path d="M12 3v4"/><path d="M12 17v4"/></svg>',
+          desc: 'Cobre danos materiais a letreiros, painéis e anúncios luminosos instalados na fachada ou perímetro da empresa.'
         },
         {
           id: 'vendaval',
@@ -88,6 +94,18 @@ window.PRODUTOS.patrimonial = {
           nome: 'Subtração de Bens',
           icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
           desc: 'Garante prejuízos por roubo ou furto qualificado (mediante arrombamento ou ameaça) de bens e mercadorias.'
+        },
+        {
+          id: 'deterioracao_frigorificados',
+          nome: 'Contaminação e Deterioração de Mercadorias em Ambientes Frigorificados',
+          icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></svg>',
+          desc: 'Cobre perdas de mercadorias perecíveis acondicionadas em câmaras frias ou frigoríficos por falha de refrigeração ou derrame de fluido.'
+        },
+        {
+          id: 'despesas_salvamento',
+          nome: 'Despesas de Salvamento',
+          icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>',
+          desc: 'Reembolsa gastos comprovadamente necessários para conter o sinistro, proteger os bens e minimizar a extensão dos prejuízos.'
         }
       ]
     },
@@ -111,6 +129,12 @@ window.PRODUTOS.patrimonial = {
           nome: 'Responsabilidade Civil Empregador',
           icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
           desc: 'Reembolsa indenizações devidas pela empresa em caso de morte ou invalidez permanente de funcionários em serviço.'
+        },
+        {
+          id: 'custos_defesa',
+          nome: 'Custos de Defesa',
+          icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',
+          desc: 'Cobre honorários advocatícios, custas judiciais e despesas periciais na defesa do segurado em ações vinculadas a riscos cobertos.'
         },
         {
           id: 'assistencia',
