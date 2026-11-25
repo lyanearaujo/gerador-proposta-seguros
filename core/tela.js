@@ -114,8 +114,12 @@ function atualizarPreview() {
   doc.body.setAttribute('data-capa', estado.capa ? 'sim' : 'nao');
   doc.body.innerHTML = montarProposta(estado, corretora);
   doc.title = nomeArquivo(estado);
+  ajustarDensidadePaginas(doc.body);
   ajustarPreview();
-  setTimeout(ajustarPreview, 400);
+  setTimeout(function () {
+    ajustarDensidadePaginas(doc.body);
+    ajustarPreview();
+  }, 400);
 }
 
 function mudou() {
@@ -613,9 +617,15 @@ $('#arquivo').addEventListener('change', function (ev) {
 });
 
 $('#btnPdf').addEventListener('click', function () {
-  const pend = validarProposta(estado);
-  if (pend.length && !confirm('Atenção antes de gerar o PDF:\n\n• ' + pend.join('\n• ') + '\n\nGerar mesmo assim?')) return;
   atualizarPreview();
+  const pend = validarProposta(estado);
+  const estouros = frame.contentDocument
+    ? frame.contentDocument.querySelectorAll('.pagina-estouro').length
+    : 0;
+  if (estouros > 0) {
+    pend.push('Há ' + estouros + ' página(s) com texto excedendo o limite da folha A4 (marcada com borda tracejada vermelha na prévia).');
+  }
+  if (pend.length && !confirm('Atenção antes de gerar o PDF:\n\n• ' + pend.join('\n• ') + '\n\nGerar mesmo assim?')) return;
   const nome = nomeArquivo(estado);
   const tituloAntes = document.title;
   document.title = nome;

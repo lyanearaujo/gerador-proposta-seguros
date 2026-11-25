@@ -406,12 +406,14 @@ table.comparativo{
     font-size:10pt;
 }
 .grade .item::before{
-    content:"¹3";
+    content:"";
     position:absolute;
-    left:11px;
-    top:8px;
-    color:var(--dourado);
-    font-weight:700;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    width:7px;
+    height:7px;
+    background:var(--dourado);
 }
  
 /* --------- ASSINATURA --------- */
@@ -653,7 +655,7 @@ table.tabela-matriz tbody tr.linha-resumo.total td:not(:first-child){
     grid-column: 1 / -1;
 }
 
-/* --------- AJUSTE DE QUEBRA E COMPACTAÇÃO AUTOMÁTICA --------- */
+/* --------- REDIMENSIONAMENTO PROPORCIONAL (SEM BURACOS NAS PÁGINAS) --------- */
 @media print{
     body{
         background:#fff;
@@ -661,35 +663,223 @@ table.tabela-matriz tbody tr.linha-resumo.total td:not(:first-child){
     .pagina{
         margin:0;
         box-shadow:none;
-        min-height:297mm;
-        height:auto;
+        height:297mm;
+        overflow:hidden;
     }
 }
 
-.secao-cont{
-    font-size:10pt;
-    font-weight:400;
-    color:var(--texto-suave);
+/* 1. Descritivo de Coberturas: compactação proporcional quando há 15+ coberturas */
+.pagina-coberturas.cob-compacta .secao{
+    margin-bottom:6px;
+}
+.pagina-coberturas.cob-compacta .intro{
+    margin-bottom:8px;
+    font-size:8.6pt;
+}
+.pagina-coberturas.cob-compacta .grupo-cob{
+    margin-bottom:7px;
+}
+.pagina-coberturas.cob-compacta .subsecao-cob{
+    margin:0 0 4px;
+    font-size:8pt;
+}
+.pagina-coberturas.cob-compacta .cob-grid{
+    gap:4px 8px;
+}
+.pagina-coberturas.cob-compacta .card-cob{
+    padding:4.5px 7px;
+    gap:7px;
+}
+.pagina-coberturas.cob-compacta .cob-icone{
+    width:20px;
+    height:20px;
+}
+.pagina-coberturas.cob-compacta .cob-icone svg{
+    width:12px;
+    height:12px;
+}
+.pagina-coberturas.cob-compacta .cob-nome{
+    font-size:7.6pt;
+    margin-bottom:1px;
+}
+.pagina-coberturas.cob-compacta .cob-desc{
+    font-size:6.8pt;
+    line-height:1.22;
 }
 
-/* Compactação automática da tabela quando há muitas coberturas (10+) */
-table.tabela-matriz.tabela-compacta{
+/* 2. Tabela Matriz: reparticiona o espaço vertical conforme o nº de coberturas */
+table.tabela-matriz.tabela-media{
     font-size:7pt;
 }
-table.tabela-matriz.tabela-compacta thead tr:first-child th.th-seg{
+table.tabela-matriz.tabela-media thead tr:first-child th.th-seg{
     padding:5px 3px;
 }
-table.tabela-matriz.tabela-compacta thead tr:nth-child(2) th.sub-th{
+table.tabela-matriz.tabela-media thead tr:nth-child(2) th.sub-th{
     padding:3.5px 2px;
     font-size:6.4pt;
 }
-table.tabela-matriz.tabela-compacta tbody td{
-    padding:3px 3px;
+table.tabela-matriz.tabela-media tbody td{
+    padding:3.2px 3px;
     line-height:1.2;
 }
-table.tabela-matriz.tabela-compacta tbody td:first-child{
+table.tabela-matriz.tabela-media tbody td:first-child{
     padding:3.5px 6px;
 }
-table.tabela-matriz.tabela-compacta tbody tr.linha-resumo.total td:not(:first-child){
-    font-size:7.6pt;
+
+/* Para 15 a 20 coberturas: cabe inteira + Recomendação Técnica em 1 folha A4 */
+table.tabela-matriz.tabela-densa{
+    font-size:6.5pt;
+}
+table.tabela-matriz.tabela-densa thead tr:first-child th.th-seg{
+    padding:4px 3px;
+    font-size:7pt;
+}
+table.tabela-matriz.tabela-densa thead tr:nth-child(2) th.sub-th{
+    padding:2.5px 2px;
+    font-size:6pt;
+}
+table.tabela-matriz.tabela-densa tbody td{
+    padding:2px 3px;
+    line-height:1.15;
+}
+table.tabela-matriz.tabela-densa tbody td:first-child{
+    padding:2.2px 6px;
+}
+table.tabela-matriz.tabela-densa tbody tr.linha-resumo.total td:not(:first-child){
+    font-size:7.2pt;
+}
+.pagina-matriz-densa .bloco{
+    margin-bottom:10px;
+}
+.pagina-matriz-densa .intro{
+    margin-bottom:7px;
+}
+.pagina-matriz-densa .nota{
+    margin-top:5px;
+    font-size:7.5pt;
+}
+.pagina-matriz-densa .recomendacao{
+    padding:8px 12px;
+    font-size:8.4pt;
+}
+
+/* --------- AUTO-AJUSTE FINO DE DENSIDADE POR PÁGINA --------- */
+/* Nível 1: quando o texto passa até ~12% da área útil */
+.pagina.pagina-compacta-1{
+    padding-top:15mm;
+    padding-bottom:24mm;
+}
+.pagina.pagina-compacta-1 .bloco{
+    margin-bottom:10px;
+}
+.pagina.pagina-compacta-1 .secao{
+    margin-bottom:6px;
+    font-size:11.5pt;
+}
+.pagina.pagina-compacta-1 .intro{
+    margin-bottom:7px;
+    font-size:8.7pt;
+    line-height:1.35;
+}
+.pagina.pagina-compacta-1 .destaques li,
+.pagina.pagina-compacta-1 .caixa-lista li,
+.pagina.pagina-compacta-1 .condicoes p{
+    font-size:8.5pt;
+    line-height:1.32;
+    margin-bottom:4px;
+}
+.pagina.pagina-compacta-1 .caixa,
+.pagina.pagina-compacta-1 .recomendacao{
+    padding:9px 12px;
+    font-size:8.6pt;
+    line-height:1.35;
+}
+.pagina.pagina-compacta-1 .cards{
+    gap:7px;
+}
+.pagina.pagina-compacta-1 .card{
+    padding:7px 10px;
+}
+.pagina.pagina-compacta-1 .grade{
+    gap:6px;
+}
+.pagina.pagina-compacta-1 .grade .item{
+    padding:6px 9px;
+    font-size:8.3pt;
+}
+
+/* Nível 2: quando o texto é bem extenso (passa de 12% a 25% da área útil) */
+.pagina.pagina-compacta-2{
+    padding-top:12mm;
+    padding-bottom:21mm;
+}
+.pagina.pagina-compacta-2 .bloco{
+    margin-bottom:7px;
+}
+.pagina.pagina-compacta-2 .secao{
+    margin-bottom:4px;
+    font-size:10.8pt;
+}
+.pagina.pagina-compacta-2 .intro{
+    margin-bottom:5px;
+    font-size:8.1pt;
+    line-height:1.28;
+}
+.pagina.pagina-compacta-2 .destaques li,
+.pagina.pagina-compacta-2 .caixa-lista li,
+.pagina.pagina-compacta-2 .condicoes p{
+    font-size:8pt;
+    line-height:1.25;
+    margin-bottom:2.5px;
+}
+.pagina.pagina-compacta-2 .caixa,
+.pagina.pagina-compacta-2 .recomendacao{
+    padding:7px 10px;
+    font-size:8pt;
+    line-height:1.28;
+}
+.pagina.pagina-compacta-2 .cards{
+    gap:5px;
+}
+.pagina.pagina-compacta-2 .card{
+    padding:5px 8px;
+}
+.pagina.pagina-compacta-2 .card .valor{
+    font-size:9.2pt;
+}
+.pagina.pagina-compacta-2 .card .detalhe{
+    font-size:7.4pt;
+    line-height:1.2;
+}
+.pagina.pagina-compacta-2 .grade{
+    gap:4px;
+}
+.pagina.pagina-compacta-2 .grade .item{
+    padding:4.5px 8px;
+    font-size:7.8pt;
+}
+.pagina.pagina-compacta-2 .assinatura{
+    margin-top:8px;
+    padding-top:7px;
+}
+
+/* Indicador visual apenas na tela caso o texto ultrapasse o limite físico mesmo no Nível 2 */
+@media screen{
+    .pagina.pagina-estouro{
+        outline:2px dashed #dc2626;
+        outline-offset:-6px;
+    }
+    .pagina.pagina-estouro::after{
+        content:"Limite da página excedido — reduza levemente o texto desta folha";
+        position:absolute;
+        top:6px;
+        right:12px;
+        background:#dc2626;
+        color:#fff;
+        font-size:7.5pt;
+        font-weight:600;
+        padding:2px 8px;
+        border-radius:4px;
+        z-index:20;
+    }
 }

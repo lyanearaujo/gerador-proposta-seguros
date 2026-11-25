@@ -180,115 +180,52 @@ function validarProposta(e) {
   return p;
 }
 
-/* ---------- helpers de paginação automática ---------- */
+/* ---------- helpers de redimensionamento proporcional ---------- */
 function renderizarDescritivoPaginado(gruposCoberturas, d, rodape, introTexto) {
   const selec = Array.isArray(d.coberturasSelecionadas) ? d.coberturasSelecionadas : [];
   if (!selec.length) return '';
   const custom = d.coberturasCustom || {};
 
-  // Altura útil de uma página A4 (297mm - 20mm topo - 32mm rodapé = 245mm ~ 925px)
-  // Cada linha de 2 cards mede ~72px; cada cabeçalho de grupo ~34px; cabeçalho da página ~105px.
-  const CAPACIDADE_PAG1 = 760;
-  const CAPACIDADE_PAG_CONT = 820;
-
-  const paginas = [];
-  let paginaAtual = [];
-  let alturaUsada = 0;
-
-  gruposCoberturas.forEach(function (g) {
+  let totalMarcados = 0;
+  const blocos = gruposCoberturas.map(function (g) {
     const marcados = g.itens.filter(function (it) { return selec.indexOf(it.id) >= 0; });
-    if (!marcados.length) return;
+    if (!marcados.length) return '';
+    totalMarcados += marcados.length;
 
-    // Divide os itens do grupo em pares (2 colunas por linha)
-    const linhasCards = [];
-    for (let i = 0; i < marcados.length; i += 2) {
-      linhasCards.push(marcados.slice(i, i + 2));
-    }
+    const cardsHtml = marcados.map(function (it) {
+      const texto = it.customizavel
+        ? (String(custom[it.id] || '').trim() || 'Cobertura de assistência emergencial 24h conforme condições contratadas.')
+        : it.desc;
 
-    let idxLinha = 0;
-    while (idxLinha < linhasCards.length) {
-      const cap = paginas.length === 0 ? CAPACIDADE_PAG1 : CAPACIDADE_PAG_CONT;
-      const altCabGrupo = 36;
-      const altLinha = 76;
-
-      // Se não cabe nem o título do grupo + 1 linha de cards, fecha a página atual
-      if (paginaAtual.length > 0 && (alturaUsada + altCabGrupo + altLinha > cap)) {
-        paginas.push(paginaAtual);
-        paginaAtual = [];
-        alturaUsada = 0;
-        continue;
-      }
-
-      const linhasQueCabem = [];
-      alturaUsada += altCabGrupo;
-      while (idxLinha < linhasCards.length) {
-        const capAtual = paginas.length === 0 ? CAPACIDADE_PAG1 : CAPACIDADE_PAG_CONT;
-        if (linhasQueCabem.length > 0 && (alturaUsada + altLinha > capAtual)) break;
-        linhasQueCabem.push(linhasCards[idxLinha]);
-        alturaUsada += altLinha;
-        idxLinha += 1;
-      }
-
-      const itensBloco = [].concat.apply([], linhasQueCabem);
-      const ehContinuacaoGrupo = idxLinha > linhasQueCabem.length && linhasQueCabem.length < linhasCards.length;
-      const sufixoGrupo = (paginaAtual.length === 0 && paginas.length > 0 && linhasQueCabem.length < linhasCards.length)
-        ? ' (continuação)'
-        : '';
-
-      paginaAtual.push({
-        grupo: g.grupo + sufixoGrupo,
-        itens: itensBloco
-      });
-
-      if (idxLinha < linhasCards.length) {
-        paginas.push(paginaAtual);
-        paginaAtual = [];
-        alturaUsada = 0;
-      }
-    }
-  });
-
-  if (paginaAtual.length) paginas.push(paginaAtual);
-  if (!paginas.length) return '';
-
-  return paginas.map(function (blocosPag, pIdx) {
-    const blocosHtml = blocosPag.map(function (b) {
-      const cardsHtml = b.itens.map(function (it) {
-        const texto = it.customizavel
-          ? (String(custom[it.id] || '').trim() || 'Cobertura de assistência emergencial 24h conforme condições contratadas.')
-          : it.desc;
-
-        return '<div class="card-cob">' +
-          '<div class="cob-icone">' + (it.icone || '') + '</div>' +
-          '<div class="cob-info">' +
-            '<div class="cob-nome">' + esc(it.nome) + '</div>' +
-            '<div class="cob-desc">' + rich(texto) + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-
-      return '<div class="grupo-cob">' +
-        '<h3 class="subsecao-cob">' + esc(b.grupo) + '</h3>' +
-        '<div class="cards cob-grid">' + cardsHtml + '</div>' +
+      return '<div class="card-cob">' +
+        '<div class="cob-icone">' + (it.icone || '') + '</div>' +
+        '<div class="cob-info">' +
+          '<div class="cob-nome">' + esc(it.nome) + '</div>' +
+          '<div class="cob-desc">' + rich(texto) + '</div>' +
+        '</div>' +
       '</div>';
     }).join('');
 
-    const tituloSecao = pIdx === 0
-      ? 'Descritivo das Coberturas Contratadas'
-      : 'Descritivo das Coberturas Contratadas <span class="secao-cont">(continuação)</span>';
+    return '<div class="grupo-cob">' +
+      '<h3 class="subsecao-cob">' + esc(g.grupo) + '</h3>' +
+      '<div class="cards cob-grid">' + cardsHtml + '</div>' +
+    '</div>';
+  }).filter(Boolean).join('');
 
-    const introHtml = pIdx === 0 ? '<p class="intro">' + esc(introTexto) + '</p>' : '';
+  if (!blocos) return '';
 
-    return `
-<section class="pagina pagina-coberturas">
+  // Ativa compactação proporcional a partir de 13 coberturas para caber 100% em 1 página sem sobras
+  const clsCompacta = totalMarcados >= 13 ? ' cob-compacta' : '';
+
+  return `
+<section class="pagina pagina-coberturas${clsCompacta}">
   <div class="bloco">
-    <h2 class="secao">${tituloSecao}</h2>
-    ${introHtml}
-    ${blocosHtml}
+    <h2 class="secao">Descritivo das Coberturas Contratadas</h2>
+    <p class="intro">${esc(introTexto)}</p>
+    ${blocos}
   </div>
   ${rodape}
 </section>`;
-  }).join('');
 }
 
 function renderizarMatrizPaginada(produto, d, rodape) {
@@ -296,7 +233,6 @@ function renderizarMatrizPaginada(produto, d, rodape) {
   const numSeg = Math.max(1, d.colunas.length);
   const valsCob = d.valoresCoberturas || {};
   const res = d.resumoValores || { liquido: [], total: [], pagamento: [] };
-  const compacta = ativas.length >= 10;
 
   const largCob = numSeg >= 4 ? 22 : 25;
   const largSub = ((100 - largCob) / (numSeg * 2)).toFixed(4) + '%';
@@ -316,7 +252,16 @@ function renderizarMatrizPaginada(produto, d, rodape) {
     return '<th' + cls + '>Limite de Garantia</th><th' + cls + '>Franquia</th>';
   }).join('');
 
-  const theadHtml = '<thead><tr>' + thLinha1 + '</tr><tr>' + thLinha2 + '</tr></thead>';
+  const linhasCob = ativas.map(function (cob) {
+    const arr = valsCob[cob.id] || [];
+    const tds = d.colunas.map(function (_, i) {
+      const item = arr[i] || { lmg: '', franq: '' };
+      const cls = i === d.destaqueCol ? ' class="destaque"' : '';
+      return '<td' + cls + '>' + cel(item.lmg) + '</td>' +
+             '<td' + cls + '>' + cel(item.franq) + '</td>';
+    }).join('');
+    return '<tr><td>' + esc(cob.nome) + '</td>' + tds + '</tr>';
+  }).join('');
 
   const montarLinhaResumo = function (rotulo, arrVals, classeLinha) {
     const tds = d.colunas.map(function (_, i) {
@@ -331,83 +276,35 @@ function renderizarMatrizPaginada(produto, d, rodape) {
     montarLinhaResumo('Valor Total', res.total, 'linha-resumo total') +
     montarLinhaResumo('Forma de Pagamento', res.pagamento, 'linha-resumo linha-pagto');
 
-  const blocoRecomendacao = d.recomendacao.trim() ? `
-  <div class="bloco evitar-quebra">
-    <h2 class="secao">Recomendação Técnica</h2>
-    <div class="recomendacao">${rich(d.recomendacao)}</div>
-  </div>` : '';
+  // Escala vertical automática conforme quantidade de coberturas
+  let clsTabela = 'comparativo tabela-matriz';
+  let clsPagina = 'pagina';
+  if (ativas.length >= 15) {
+    clsTabela += ' tabela-densa';
+    clsPagina += ' pagina-matriz-densa';
+  } else if (ativas.length >= 10) {
+    clsTabela += ' tabela-media';
+  }
 
-  // Até 14 coberturas compactadas cabem confortavelmente junto com a Recomendação Técnica em 1 página A4.
-  // Acima de 14 coberturas, divide a tabela em 2 páginas sem cortar linhas nem sobrepor o rodapé.
-  const MAX_LINHAS_PAG1 = 14;
-  const clsTabela = 'comparativo tabela-matriz' + (compacta ? ' tabela-compacta' : '');
+  const tabelaHtml = '<table class="' + clsTabela + '">' +
+    colgroup +
+    '<thead><tr>' + thLinha1 + '</tr><tr>' + thLinha2 + '</tr></thead>' +
+    '<tbody>' + linhasCob + linhasResumoHtml + '</tbody>' +
+  '</table>';
 
-  if (ativas.length <= MAX_LINHAS_PAG1) {
-    const linhasCob = ativas.map(function (cob) {
-      const arr = valsCob[cob.id] || [];
-      const tds = d.colunas.map(function (_, i) {
-        const item = arr[i] || { lmg: '', franq: '' };
-        const cls = i === d.destaqueCol ? ' class="destaque"' : '';
-        return '<td' + cls + '>' + cel(item.lmg) + '</td>' +
-               '<td' + cls + '>' + cel(item.franq) + '</td>';
-      }).join('');
-      return '<tr><td>' + esc(cob.nome) + '</td>' + tds + '</tr>';
-    }).join('');
-
-    const tabelaHtml = '<table class="' + clsTabela + '">' +
-      colgroup + theadHtml +
-      '<tbody>' + linhasCob + linhasResumoHtml + '</tbody>' +
-    '</table>';
-
-    return `
-<section class="pagina">
+  return `
+<section class="${clsPagina}">
   <div class="bloco">
     <h2 class="secao">${esc(d.tituloComp)}</h2>
     <p class="intro">${rich(d.textoComp)}</p>
     ${tabelaHtml}
     ${d.notaTabela.trim() ? '<p class="nota">' + rich(d.notaTabela) + '</p>' : ''}
   </div>
-  ${blocoRecomendacao}
-  ${rodape}
-</section>`;
-  }
-
-  // Paginação da tabela quando há mais de 14 coberturas
-  const parte1 = ativas.slice(0, MAX_LINHAS_PAG1);
-  const parte2 = ativas.slice(MAX_LINHAS_PAG1);
-
-  const renderLinhas = function (lista) {
-    return lista.map(function (cob) {
-      const arr = valsCob[cob.id] || [];
-      const tds = d.colunas.map(function (_, i) {
-        const item = arr[i] || { lmg: '', franq: '' };
-        const cls = i === d.destaqueCol ? ' class="destaque"' : '';
-        return '<td' + cls + '>' + cel(item.lmg) + '</td>' +
-               '<td' + cls + '>' + cel(item.franq) + '</td>';
-      }).join('');
-      return '<tr><td>' + esc(cob.nome) + '</td>' + tds + '</tr>';
-    }).join('');
-  };
-
-  const tab1 = '<table class="' + clsTabela + '">' + colgroup + theadHtml + '<tbody>' + renderLinhas(parte1) + '</tbody></table>';
-  const tab2 = '<table class="' + clsTabela + '">' + colgroup + theadHtml + '<tbody>' + renderLinhas(parte2) + linhasResumoHtml + '</tbody></table>';
-
-  return `
-<section class="pagina">
-  <div class="bloco">
-    <h2 class="secao">${esc(d.tituloComp)}</h2>
-    <p class="intro">${rich(d.textoComp)}</p>
-    ${tab1}
-  </div>
-  ${rodape}
-</section>
-<section class="pagina">
-  <div class="bloco">
-    <h2 class="secao">${esc(d.tituloComp)} <span class="secao-cont">(continuação)</span></h2>
-    ${tab2}
-    ${d.notaTabela.trim() ? '<p class="nota">' + rich(d.notaTabela) + '</p>' : ''}
-  </div>
-  ${blocoRecomendacao}
+  ${d.recomendacao.trim() ? `
+  <div class="bloco evitar-quebra">
+    <h2 class="secao">Recomendação Técnica</h2>
+    <div class="recomendacao">${rich(d.recomendacao)}</div>
+  </div>` : ''}
   ${rodape}
 </section>`;
 }
@@ -615,4 +512,39 @@ function montarProposta(e, c) {
 </section>`;
 
   return capa + pagina2 + paginaExtra + secaoComparativo + paginaConcorrente + pagina4 + final;
+}
+
+/* ---------- ajuste automático de densidade por página ---------- */
+function ajustarDensidadePaginas(container) {
+  if (!container) return;
+  const paginas = container.querySelectorAll('.pagina:not(.capa):not(.final)');
+
+  paginas.forEach(function (pag) {
+    pag.classList.remove('pagina-compacta-1', 'pagina-compacta-2', 'pagina-estouro');
+
+    const rodape = pag.querySelector('.rodape');
+    const limiteInferior = rodape
+      ? (rodape.offsetTop - 8)
+      : (pag.clientHeight - 24);
+
+    const conteudoExcedeu = function () {
+      const filhos = Array.from(pag.children).filter(function (el) {
+        return !el.classList.contains('rodape');
+      });
+      if (!filhos.length) return false;
+      const ultimo = filhos[filhos.length - 1];
+      return (ultimo.offsetTop + ultimo.offsetHeight) > limiteInferior;
+    };
+
+    if (!conteudoExcedeu()) return;
+
+    pag.classList.add('pagina-compacta-1');
+    if (!conteudoExcedeu()) return;
+
+    pag.classList.remove('pagina-compacta-1');
+    pag.classList.add('pagina-compacta-2');
+    if (!conteudoExcedeu()) return;
+
+    pag.classList.add('pagina-estouro');
+  });
 }
