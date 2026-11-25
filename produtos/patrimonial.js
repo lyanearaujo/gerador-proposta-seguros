@@ -348,45 +348,12 @@ window.PRODUTOS.patrimonial = {
     '</table>';
   },
 
-  renderizarPaginaExtra: function (d, rodape, utils) {
-    const selec = Array.isArray(d.coberturasSelecionadas) ? d.coberturasSelecionadas : [];
-    if (!selec.length) return '';
-    const custom = d.coberturasCustom || {};
-
-    const blocos = this.gruposCoberturas.map(function (g) {
-      const marcados = g.itens.filter(function (it) { return selec.indexOf(it.id) >= 0; });
-      if (!marcados.length) return '';
-
-      const cardsHtml = marcados.map(function (it) {
-        const texto = it.customizavel
-          ? (String(custom[it.id] || '').trim() || 'Cobertura de assistência emergencial 24h conforme condições contratadas.')
-          : it.desc;
-
-        return '<div class="card-cob">' +
-          '<div class="cob-icone">' + (it.icone || '') + '</div>' +
-          '<div class="cob-info">' +
-            '<div class="cob-nome">' + utils.esc(it.nome) + '</div>' +
-            '<div class="cob-desc">' + utils.rich(texto) + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-
-      return '<div class="grupo-cob">' +
-        '<h3 class="subsecao-cob">' + utils.esc(g.grupo) + '</h3>' +
-        '<div class="cards cob-grid">' + cardsHtml + '</div>' +
-      '</div>';
-    }).filter(Boolean).join('');
-
-    if (!blocos) return '';
-
-    return `
-<section class="pagina pagina-coberturas">
-  <div class="bloco">
-    <h2 class="secao">Descritivo das Coberturas Contratadas</h2>
-    <p class="intro">Apresentamos abaixo o resumo explicativo das garantias selecionadas para a proteção do seu patrimônio, organizadas por natureza de risco:</p>
-    ${blocos}
-  </div>
-  ${rodape}
-</section>`;
+  renderizarPaginaExtra: function (d, rodape) {
+    return renderizarDescritivoPaginado(
+      this.gruposCoberturas,
+      d,
+      rodape,
+      'Apresentamos abaixo o resumo explicativo das garantias selecionadas para a proteção do seu patrimônio, organizadas por natureza de risco:'
+    );
   }
 };

@@ -180,6 +180,238 @@ function validarProposta(e) {
   return p;
 }
 
+/* ---------- helpers de paginação automática ---------- */
+function renderizarDescritivoPaginado(gruposCoberturas, d, rodape, introTexto) {
+  const selec = Array.isArray(d.coberturasSelecionadas) ? d.coberturasSelecionadas : [];
+  if (!selec.length) return '';
+  const custom = d.coberturasCustom || {};
+
+  // Altura útil de uma página A4 (297mm - 20mm topo - 32mm rodapé = 245mm ~ 925px)
+  // Cada linha de 2 cards mede ~72px; cada cabeçalho de grupo ~34px; cabeçalho da página ~105px.
+  const CAPACIDADE_PAG1 = 760;
+  const CAPACIDADE_PAG_CONT = 820;
+
+  const paginas = [];
+  let paginaAtual = [];
+  let alturaUsada = 0;
+
+  gruposCoberturas.forEach(function (g) {
+    const marcados = g.itens.filter(function (it) { return selec.indexOf(it.id) >= 0; });
+    if (!marcados.length) return;
+
+    // Divide os itens do grupo em pares (2 colunas por linha)
+    const linhasCards = [];
+    for (let i = 0; i < marcados.length; i += 2) {
+      linhasCards.push(marcados.slice(i, i + 2));
+    }
+
+    let idxLinha = 0;
+    while (idxLinha < linhasCards.length) {
+      const cap = paginas.length === 0 ? CAPACIDADE_PAG1 : CAPACIDADE_PAG_CONT;
+      const altCabGrupo = 36;
+      const altLinha = 76;
+
+      // Se não cabe nem o título do grupo + 1 linha de cards, fecha a página atual
+      if (paginaAtual.length > 0 && (alturaUsada + altCabGrupo + altLinha > cap)) {
+        paginas.push(paginaAtual);
+        paginaAtual = [];
+        alturaUsada = 0;
+        continue;
+      }
+
+      const linhasQueCabem = [];
+      alturaUsada += altCabGrupo;
+      while (idxLinha < linhasCards.length) {
+        const capAtual = paginas.length === 0 ? CAPACIDADE_PAG1 : CAPACIDADE_PAG_CONT;
+        if (linhasQueCabem.length > 0 && (alturaUsada + altLinha > capAtual)) break;
+        linhasQueCabem.push(linhasCards[idxLinha]);
+        alturaUsada += altLinha;
+        idxLinha += 1;
+      }
+
+      const itensBloco = [].concat.apply([], linhasQueCabem);
+      const ehContinuacaoGrupo = idxLinha > linhasQueCabem.length && linhasQueCabem.length < linhasCards.length;
+      const sufixoGrupo = (paginaAtual.length === 0 && paginas.length > 0 && linhasQueCabem.length < linhasCards.length)
+        ? ' (continuação)'
+        : '';
+
+      paginaAtual.push({
+        grupo: g.grupo + sufixoGrupo,
+        itens: itensBloco
+      });
+
+      if (idxLinha < linhasCards.length) {
+        paginas.push(paginaAtual);
+        paginaAtual = [];
+        alturaUsada = 0;
+      }
+    }
+  });
+
+  if (paginaAtual.length) paginas.push(paginaAtual);
+  if (!paginas.length) return '';
+
+  return paginas.map(function (blocosPag, pIdx) {
+    const blocosHtml = blocosPag.map(function (b) {
+      const cardsHtml = b.itens.map(function (it) {
+        const texto = it.customizavel
+          ? (String(custom[it.id] || '').trim() || 'Cobertura de assistência emergencial 24h conforme condições contratadas.')
+          : it.desc;
+
+        return '<div class="card-cob">' +
+          '<div class="cob-icone">' + (it.icone || '') + '</div>' +
+          '<div class="cob-info">' +
+            '<div class="cob-nome">' + esc(it.nome) + '</div>' +
+            '<div class="cob-desc">' + rich(texto) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="grupo-cob">' +
+        '<h3 class="subsecao-cob">' + esc(b.grupo) + '</h3>' +
+        '<div class="cards cob-grid">' + cardsHtml + '</div>' +
+      '</div>';
+    }).join('');
+
+    const tituloSecao = pIdx === 0
+      ? 'Descritivo das Coberturas Contratadas'
+      : 'Descritivo das Coberturas Contratadas <span class="secao-cont">(continuação)</span>';
+
+    const introHtml = pIdx === 0 ? '<p class="intro">' + esc(introTexto) + '</p>' : '';
+
+    return `
+<section class="pagina pagina-coberturas">
+  <div class="bloco">
+    <h2 class="secao">${tituloSecao}</h2>
+    ${introHtml}
+    ${blocosHtml}
+  </div>
+  ${rodape}
+</section>`;
+  }).join('');
+}
+
+function renderizarMatrizPaginada(produto, d, rodape) {
+  const ativas = produto.obterCoberturasAtivas(d);
+  const numSeg = Math.max(1, d.colunas.length);
+  const valsCob = d.valoresCoberturas || {};
+  const res = d.resumoValores || { liquido: [], total: [], pagamento: [] };
+  const compacta = ativas.length >= 10;
+
+  const largCob = numSeg >= 4 ? 22 : 25;
+  const largSub = ((100 - largCob) / (numSeg * 2)).toFixed(4) + '%';
+  let colgroup = '<colgroup><col style="width:' + largCob + '%">';
+  for (let i = 0; i < numSeg * 2; i++) {
+    colgroup += '<col style="width:' + largSub + '">';
+  }
+  colgroup += '</colgroup>';
+
+  const thLinha1 = '<th rowspan="2">' + esc(d.primeiraColuna || 'Coberturas') + '</th>' +
+    d.colunas.map(function (nome, i) {
+      return '<th colspan="2" class="th-seg' + (i === d.destaqueCol ? ' th-destaque' : '') + '">' + esc(nome) + '</th>';
+    }).join('');
+
+  const thLinha2 = d.colunas.map(function (_, i) {
+    const cls = i === d.destaqueCol ? ' class="sub-th sub-destaque"' : ' class="sub-th"';
+    return '<th' + cls + '>Limite de Garantia</th><th' + cls + '>Franquia</th>';
+  }).join('');
+
+  const theadHtml = '<thead><tr>' + thLinha1 + '</tr><tr>' + thLinha2 + '</tr></thead>';
+
+  const montarLinhaResumo = function (rotulo, arrVals, classeLinha) {
+    const tds = d.colunas.map(function (_, i) {
+      const cls = i === d.destaqueCol ? ' class="destaque"' : '';
+      return '<td colspan="2"' + cls + '>' + cel((arrVals || [])[i]) + '</td>';
+    }).join('');
+    return '<tr class="' + classeLinha + '"><td>' + esc(rotulo) + '</td>' + tds + '</tr>';
+  };
+
+  const linhasResumoHtml =
+    montarLinhaResumo('Valor Líquido', res.liquido, 'linha-resumo') +
+    montarLinhaResumo('Valor Total', res.total, 'linha-resumo total') +
+    montarLinhaResumo('Forma de Pagamento', res.pagamento, 'linha-resumo linha-pagto');
+
+  const blocoRecomendacao = d.recomendacao.trim() ? `
+  <div class="bloco evitar-quebra">
+    <h2 class="secao">Recomendação Técnica</h2>
+    <div class="recomendacao">${rich(d.recomendacao)}</div>
+  </div>` : '';
+
+  // Até 14 coberturas compactadas cabem confortavelmente junto com a Recomendação Técnica em 1 página A4.
+  // Acima de 14 coberturas, divide a tabela em 2 páginas sem cortar linhas nem sobrepor o rodapé.
+  const MAX_LINHAS_PAG1 = 14;
+  const clsTabela = 'comparativo tabela-matriz' + (compacta ? ' tabela-compacta' : '');
+
+  if (ativas.length <= MAX_LINHAS_PAG1) {
+    const linhasCob = ativas.map(function (cob) {
+      const arr = valsCob[cob.id] || [];
+      const tds = d.colunas.map(function (_, i) {
+        const item = arr[i] || { lmg: '', franq: '' };
+        const cls = i === d.destaqueCol ? ' class="destaque"' : '';
+        return '<td' + cls + '>' + cel(item.lmg) + '</td>' +
+               '<td' + cls + '>' + cel(item.franq) + '</td>';
+      }).join('');
+      return '<tr><td>' + esc(cob.nome) + '</td>' + tds + '</tr>';
+    }).join('');
+
+    const tabelaHtml = '<table class="' + clsTabela + '">' +
+      colgroup + theadHtml +
+      '<tbody>' + linhasCob + linhasResumoHtml + '</tbody>' +
+    '</table>';
+
+    return `
+<section class="pagina">
+  <div class="bloco">
+    <h2 class="secao">${esc(d.tituloComp)}</h2>
+    <p class="intro">${rich(d.textoComp)}</p>
+    ${tabelaHtml}
+    ${d.notaTabela.trim() ? '<p class="nota">' + rich(d.notaTabela) + '</p>' : ''}
+  </div>
+  ${blocoRecomendacao}
+  ${rodape}
+</section>`;
+  }
+
+  // Paginação da tabela quando há mais de 14 coberturas
+  const parte1 = ativas.slice(0, MAX_LINHAS_PAG1);
+  const parte2 = ativas.slice(MAX_LINHAS_PAG1);
+
+  const renderLinhas = function (lista) {
+    return lista.map(function (cob) {
+      const arr = valsCob[cob.id] || [];
+      const tds = d.colunas.map(function (_, i) {
+        const item = arr[i] || { lmg: '', franq: '' };
+        const cls = i === d.destaqueCol ? ' class="destaque"' : '';
+        return '<td' + cls + '>' + cel(item.lmg) + '</td>' +
+               '<td' + cls + '>' + cel(item.franq) + '</td>';
+      }).join('');
+      return '<tr><td>' + esc(cob.nome) + '</td>' + tds + '</tr>';
+    }).join('');
+  };
+
+  const tab1 = '<table class="' + clsTabela + '">' + colgroup + theadHtml + '<tbody>' + renderLinhas(parte1) + '</tbody></table>';
+  const tab2 = '<table class="' + clsTabela + '">' + colgroup + theadHtml + '<tbody>' + renderLinhas(parte2) + linhasResumoHtml + '</tbody></table>';
+
+  return `
+<section class="pagina">
+  <div class="bloco">
+    <h2 class="secao">${esc(d.tituloComp)}</h2>
+    <p class="intro">${rich(d.textoComp)}</p>
+    ${tab1}
+  </div>
+  ${rodape}
+</section>
+<section class="pagina">
+  <div class="bloco">
+    <h2 class="secao">${esc(d.tituloComp)} <span class="secao-cont">(continuação)</span></h2>
+    ${tab2}
+    ${d.notaTabela.trim() ? '<p class="nota">' + rich(d.notaTabela) + '</p>' : ''}
+  </div>
+  ${blocoRecomendacao}
+  ${rodape}
+</section>`;
+}
+
 /* ---------- montagem do HTML ---------- */
 function montarProposta(e, c) {
   const prod = obterProduto(e.tipo);
@@ -272,9 +504,9 @@ function montarProposta(e, c) {
     ? prod.renderizarPaginaExtra(d, rodape, { esc: esc, rich: rich })
     : '';
 
-  let tabelaHtml = '';
-  if (prod.renderizarTabelaComparativa) {
-    tabelaHtml = prod.renderizarTabelaComparativa(d, { esc: esc, rich: rich, cel: cel });
+  let secaoComparativo = '';
+  if (prod.tabelaMatrizCoberturas) {
+    secaoComparativo = renderizarMatrizPaginada(prod, d, rodape);
   } else {
     const thead = '<tr><th>' + esc(d.primeiraColuna) + '</th>' +
       d.colunas.map(function (n) { return '<th>' + esc(n) + '</th>'; }).join('') + '</tr>';
@@ -289,10 +521,9 @@ function montarProposta(e, c) {
         return '<td' + (i === d.destaqueCol ? ' class="destaque"' : '') + '>' + cel(v) + '</td>';
       }).join('') + '</tr>';
     }).join('');
-    tabelaHtml = '<table class="comparativo"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
-  }
+    const tabelaHtml = '<table class="comparativo"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
 
-  const pagina3 = `
+    secaoComparativo = `
 <section class="pagina">
   <div class="bloco">
     <h2 class="secao">${esc(d.tituloComp)}</h2>
@@ -307,6 +538,7 @@ function montarProposta(e, c) {
   </div>` : ''}
   ${rodape}
 </section>`;
+  }
 
   const paginaConcorrente = prod.renderizarPaginaConcorrente
     ? prod.renderizarPaginaConcorrente(d, rodape, { esc: esc, rich: rich, cel: cel })
@@ -382,5 +614,5 @@ function montarProposta(e, c) {
   </div>
 </section>`;
 
-  return capa + pagina2 + paginaExtra + pagina3 + paginaConcorrente + pagina4 + final;
+  return capa + pagina2 + paginaExtra + secaoComparativo + paginaConcorrente + pagina4 + final;
 }

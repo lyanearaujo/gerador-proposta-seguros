@@ -652,3 +652,44 @@ table.tabela-matriz tbody tr.linha-resumo.total td:not(:first-child){
 .cards:not(.tres):not(.cob-grid) .card:last-child:nth-child(odd){
     grid-column: 1 / -1;
 }
+
+/* --------- AJUSTE DE QUEBRA E COMPACTAÇÃO AUTOMÁTICA --------- */
+@media print{
+    body{
+        background:#fff;
+    }
+    .pagina{
+        margin:0;
+        box-shadow:none;
+        min-height:297mm;
+        height:auto;
+    }
+}
+
+.secao-cont{
+    font-size:10pt;
+    font-weight:400;
+    color:var(--texto-suave);
+}
+
+/* Compactação automática da tabela quando há muitas coberturas (10+) */
+table.tabela-matriz.tabela-compacta{
+    font-size:7pt;
+}
+table.tabela-matriz.tabela-compacta thead tr:first-child th.th-seg{
+    padding:5px 3px;
+}
+table.tabela-matriz.tabela-compacta thead tr:nth-child(2) th.sub-th{
+    padding:3.5px 2px;
+    font-size:6.4pt;
+}
+table.tabela-matriz.tabela-compacta tbody td{
+    padding:3px 3px;
+    line-height:1.2;
+}
+table.tabela-matriz.tabela-compacta tbody td:first-child{
+    padding:3.5px 6px;
+}
+table.tabela-matriz.tabela-compacta tbody tr.linha-resumo.total td:not(:first-child){
+    font-size:7.6pt;
+}

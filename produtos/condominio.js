@@ -439,45 +439,12 @@ window.PRODUTOS.condominio = {
 </section>`;
   },
 
-  renderizarPaginaConcorrente: function (d, rodape, utils) {
-    const cc = d.comparativoConcorrente;
-    if (!cc || !cc.ativo) return '';
-    const linhasValidas = (cc.linhas || []).filter(function (l) {
-      return (l.item && l.item.trim()) || (l.concorrente && l.concorrente.trim()) || (l.nossa && l.nossa.trim());
-    });
-    if (!linhasValidas.length) return '';
-
-    const linhasHtml = linhasValidas.map(function (l, idx) {
-      return '<tr>' +
-        '<td>' + utils.esc(l.item || '—') + '</td>' +
-        '<td>' + utils.cel(l.concorrente) + '</td>' +
-        '<td class="destaque">' + utils.cel(l.nossa) + '</td>' +
-      '</tr>';
-    }).join('');
-
-    return `
-<section class="pagina">
-  <div class="bloco">
-    <h2 class="secao">${utils.esc(cc.titulo || 'Comparativo: Proposta Concorrente vs. Nossa Proposta')}</h2>
-    ${cc.intro ? '<p class="intro">' + utils.rich(cc.intro) + '</p>' : ''}
-    <table class="comparativo">
-      <colgroup>
-        <col style="width:36%">
-        <col style="width:32%">
-        <col style="width:32%">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Cobertura / Condição</th>
-          <th>${utils.esc(cc.nomeConcorrente || 'Proposta Concorrente')}</th>
-          <th>${utils.esc(cc.nomeNossa || 'Nossa Proposta')}</th>
-        </tr>
-      </thead>
-      <tbody>${linhasHtml}</tbody>
-    </table>
-    ${cc.observacao && cc.observacao.trim() ? '<div class="recomendacao" style="margin-top:14px">' + utils.rich(cc.observacao) + '</div>' : ''}
-  </div>
-  ${rodape}
-</section>`;
-  }
+  renderizarPaginaExtra: function (d, rodape) {
+    return renderizarDescritivoPaginado(
+      this.gruposCoberturas,
+      d,
+      rodape,
+      'Apresentamos abaixo o resumo explicativo das garantias selecionadas para a proteção do condomínio, organizadas por natureza de risco:'
+    );
+  },
 };
